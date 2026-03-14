@@ -1,0 +1,30 @@
+{
+  "label": "Erweitertes Authoring",
+  "hello": "Hallo {{name}}!",
+  "search": {
+    "placeholder": "Suchen…",
+    "results": "{{count}} Ergebnis(se)",
+    "loadingMore": "Mehr laden…",
+    "col": {
+      "title": "Titel & Auszug",
+      "type": "Typ",
+      "lastModified": "Zuletzt geändert"
+    },
+    "action": {
+      "edit": "Bearbeiten"
+    },
+    "modal": {
+      "label": "Suche",
+      "title": "Suche",
+      "hint": "Strg+K oder ⌘K zum Öffnen. Esc zum Schließen. Mit Pfeiltasten oder Tab navigieren. Enter zum Aufrufen. e zum Bearbeiten."
+    },
+    "empty": {
+      "title": "Alles finden.",
+      "hint": "Seiten, Inhalte, Dokumente … Einfach tippen (mind. 3 Zeichen)."
+    },
+    "noResults": {
+      "title": "Keine Ergebnisse.",
+      "hint": "Keine Treffer für „{{q}}". Versuchen Sie andere Begriffe oder prüfen Sie die Schreibweise."
+    }
+  }
+}

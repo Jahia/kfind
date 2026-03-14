@@ -1,4 +1,30 @@
 {
   "label": "Exemple d'administration",
-  "hello": "Bonjour {{name}} !"
+  "hello": "Bonjour {{name}} !",
+  "search": {
+    "placeholder": "Rechercher…",
+    "results": "{{count}} résultat(s)",
+    "loadingMore": "Chargement…",
+    "col": {
+      "title": "Titre & extrait",
+      "type": "Type",
+      "lastModified": "Dernière modification"
+    },
+    "action": {
+      "edit": "Modifier"
+    },
+    "modal": {
+      "label": "Recherche",
+      "title": "Recherche",
+      "hint": "Appuyez sur Ctrl+K ou ⌘K pour ouvrir. Échap pour fermer. Naviguez avec les flèches ou la touche Tab. Entrée pour accéder. e pour modifier."
+    },
+    "empty": {
+      "title": "Trouvez n'importe quoi.",
+      "hint": "Pages, contenus, documents… Commencez à taper (3 caractères min)."
+    },
+    "noResults": {
+      "title": "Aucun résultat.",
+      "hint": "Aucun résultat pour « {{q}} ». Essayez d'autres mots-clés ou vérifiez l'orthographe."
+    }
+  }
 }

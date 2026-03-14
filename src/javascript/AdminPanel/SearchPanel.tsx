@@ -205,7 +205,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
     }
     debounceRef.current = setTimeout(() => {
       triggerSearch(searchValue);
-    }, 400);
+    }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
@@ -224,23 +224,21 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         label: t("search.col.title", "Title & excerpt"),
         width: "64%",
         render: (_value: unknown, row: SearchHit) => (
-          <div style={{ overflow: "hidden", maxHeight: "52px" }}>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {row.displayableName}
             </div>
             {row.excerpt && (
               <div
                 style={{
-                  fontSize: "11px",
+                  fontSize: "12px",
                   color: "#374151",
-                  marginTop: "2px",
+                  marginTop: "3px",
                   overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  maxWidth: "100%",
-                  display: "block",
-                  lineHeight: "1.4",
-                  maxHeight: "1.4em",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  lineHeight: "1.5",
                 }}
                 dangerouslySetInnerHTML={{ __html: row.excerpt }}
               />
@@ -268,10 +266,21 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
     (row: Row<SearchHit>, defaultRender: (opts?: { actions?: React.ReactNode; actionsOnHover?: React.ReactNode }) => React.ReactNode) => (
       <TableRow
         key={row.id}
-        style={{ height: "64px", cursor: "pointer" }}
+        style={{ height: "76px", cursor: "pointer" }}
         onClick={() => { locateInJContent(row.original.path); onNavigate?.(); }}
         onKeyDown={(e: React.KeyboardEvent) => {
-          if (e.key === "Enter") { locateInJContent(row.original.path); onNavigate?.(); }
+          if (e.key === "Enter") { locateInJContent(row.original.path); onNavigate?.(); return; }
+          if (e.key === "e" || e.key === "E") { e.preventDefault(); (window.parent as any).CE_API?.edit({ path: row.original.path }); return; }
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            const rows = Array.from(
+              scrollContainerRef.current?.querySelectorAll<HTMLElement>(".moonstone-tableRow[tabindex]") ?? []
+            );
+            const idx = rows.indexOf(e.currentTarget as HTMLElement);
+            const next = e.key === "ArrowDown" ? idx + 1 : idx - 1;
+            if (next >= 0 && next < rows.length) rows[next].focus();
+            else if (next < 0) inputWrapperRef.current?.querySelector<HTMLElement>("input")?.focus();
+          }
         }}
       >
         {defaultRender({
@@ -303,6 +312,10 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         .augmented-search-input .moonstone-input { min-height: 36px !important; font-size: 16px !important; }
         .augmented-search-results thead { display: none; }
         .augmented-search-results .moonstone-tableCellActions { align-self: stretch; display: flex; align-items: center; justify-content: flex-end; }
+        .augmented-search-results .moonstone-tableRow:focus { outline: none; border-radius: 6px; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-accent); }
+        .augmented-search-results em { font-weight: 700; font-style: italic; color: var(--color-accent); }
+        @keyframes shimmer { 0% { background-position: -600px 0; } 100% { background-position: 600px 0; } }
+        .augmented-skeleton { background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 600px 100%; animation: shimmer 1.2s infinite linear; border-radius: 4px; }
       `}</style>
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
         <div ref={inputWrapperRef} style={{ flex: 1, fontSize: "1.5rem", minHeight: "36px" }} className="augmented-search-input">
@@ -313,6 +326,13 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
             icon={<Search />}
             focusOnField={focusOnField}
             onChange={(e) => setSearchValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                const first = scrollContainerRef.current?.querySelector<HTMLElement>(".moonstone-tableRow[tabindex]");
+                first?.focus();
+              }
+            }}
             onKeyUp={(e) => {
               if (e.key === "Enter") triggerSearch(searchValue);
             }}
@@ -327,7 +347,54 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         </span>
       )}
 
-      <div ref={scrollContainerRef} style={{ overflowY: "auto", flex: 1, minWidth: 0 }}>
+      <div ref={scrollContainerRef} style={{ overflowY: "auto", flex: 1, minWidth: 0, padding: "4px 4px 0" }}>
+        {/* ── Empty state ── */}
+        {searchValue.trim().length < 3 && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "80%", gap: "16px", userSelect: "none" }}>
+            <div style={{ fontSize: "72px", lineHeight: 1 }}>🔍</div>
+            <div style={{ fontSize: "26px", fontWeight: 800, color: "#111827", letterSpacing: "-0.5px" }}>
+              {t("search.empty.title", "Find anything.")}
+            </div>
+            <div style={{ fontSize: "14px", color: "#131C21", textAlign: "center", maxWidth: "300px", lineHeight: 1.6 }}>
+              {t("search.empty.hint", "Pages, content, documents, ... Just start typing (3 chars min).")}
+            </div>
+     
+          </div>
+        )}
+
+        {/* ── Skeleton loader (initial fetch) ── */}
+        {loading && allHits.length === 0 && (
+          <div>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", height: "76px", padding: "0 12px", gap: "12px", borderBottom: "1px solid #f3f4f6" }}>
+                <div style={{ flex: "0 0 32px" }}>
+                  <div className="augmented-skeleton" style={{ width: "32px", height: "32px", borderRadius: "6px" }} />
+                </div>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div className="augmented-skeleton" style={{ width: `${60 + (i * 13) % 30}%`, height: "14px" }} />
+                  <div className="augmented-skeleton" style={{ width: `${40 + (i * 17) % 40}%`, height: "11px" }} />
+                </div>
+                <div style={{ flex: "0 0 80px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div className="augmented-skeleton" style={{ width: "60px", height: "11px" }} />
+                  <div className="augmented-skeleton" style={{ width: "48px", height: "11px" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── No results ── */}
+        {searchValue.trim().length >= 3 && !loading && allHits.length === 0 && currentQueryRef.current === searchValue.trim() && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "80%", gap: "16px", userSelect: "none" }}>
+            <div style={{ fontSize: "72px", lineHeight: 1 }}>🕵️</div>
+            <div style={{ fontSize: "26px", fontWeight: 800, color: "#111827", letterSpacing: "-0.5px" }}>
+              {t("search.noResults.title", "No results.")}
+            </div>
+            <div style={{ fontSize: "14px", color: "#9ca3af", textAlign: "center", maxWidth: "300px", lineHeight: 1.6 }}>
+              {t("search.noResults.hint", 'Nothing matched "{{q}}". Try different keywords or check for typos.', { q: searchValue.trim() })}
+            </div>
+          </div>
+        )}
         <DataTable<SearchHit>
           className="augmented-search-results"
           data={allHits}

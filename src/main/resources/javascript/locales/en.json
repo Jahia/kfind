@@ -1,4 +1,30 @@
 {
   "label": "Augmented authoring",
-  "hello": "Hello {{name}}!"
+  "hello": "Hello {{name}}!",
+  "search": {
+    "placeholder": "Search…",
+    "results": "{{count}} result(s)",
+    "loadingMore": "Loading more…",
+    "col": {
+      "title": "Title & excerpt",
+      "type": "Type",
+      "lastModified": "Last modified"
+    },
+    "action": {
+      "edit": "Edit"
+    },
+    "modal": {
+      "label": "Search",
+      "title": "Search",
+      "hint": "Press Ctrl+K or ⌘K to open me. Esc to close. Navigate with arrows or tabs. Enter to go to. e for edit."
+    },
+    "empty": {
+      "title": "Find anything.",
+      "hint": "Pages, content, documents, ... Just start typing (3 chars min)."
+    },
+    "noResults": {
+      "title": "No results.",
+      "hint": "Nothing matched \"{{q}}\". Try different keywords or check for typos."
+    }
+  }
 }

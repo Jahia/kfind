@@ -68,13 +68,13 @@ export const SearchModal = () => {
     >
       <div
         style={{
-          background: "rgba(255, 255, 255, 0.92)",
+          background: "rgba(255, 255, 255, 0.76)",
           backdropFilter: "blur(8px)",
           borderRadius: "8px",
           padding: "24px",
           width: "60vw",
           maxWidth: "60vw",
-          height: "75vh",
+          height: "82vh",
           overflow: "hidden",
           boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
           color: "#1f2937",
@@ -83,6 +83,14 @@ export const SearchModal = () => {
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <div style={{ fontWeight: 700, fontSize: "20px", color: "#111827" }}>
+              {t("search.modal.title", "Search")}
+            </div>
+            <div style={{ fontSize: "12px", color: "#131C21", marginTop: "2px" }}>
+              {t("search.modal.hint", "Press Ctrl+K or ⌘K to open me. Esc to close. Navigate with arrows or tabs. Enter to go to. e for edit. ")}
+            </div>
+          </div>
           <div style={{ flex: 1, minHeight: 0 }}>
             <SearchContent focusOnField onNavigate={() => setIsOpen(false)} />
           </div>

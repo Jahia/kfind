@@ -35,6 +35,13 @@ const NavSearchButton: React.FC = () => {
 export const registerRoutes = async () => {
   await i18n.loadNamespaces("augmented-authoring");
 
+  // Align i18next language with Jahia's UI language so our translations
+  // resolve correctly regardless of which language the user has selected.
+  const uilang = window.contextJsParameters?.uilang ?? "en";
+  if (i18n.language !== uilang) {
+    await i18n.changeLanguage(uilang);
+  }
+
   // Mount the search modal once, independent of the active route, so the
   // cmd+k shortcut works from anywhere in the application.
   const modalContainer = document.createElement("div");
