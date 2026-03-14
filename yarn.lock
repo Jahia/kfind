@@ -309,11 +309,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jahia/moonstone@npm:~2.17.3":
+"@jahia/moonstone@file:/tmp/moonstone::locator=augmented-authoring%40workspace%3A.":
   version: 2.17.5
-  resolution: "@jahia/moonstone@npm:2.17.5"
+  resolution: "@jahia/moonstone@file:/tmp/moonstone#/tmp/moonstone::hash=edde33&locator=augmented-authoring%40workspace%3A."
   dependencies:
     "@floating-ui/react": "npm:^0.27.16"
+    "@tanstack/react-table": "npm:^8.21.3"
     clsx: "npm:^2.1.1"
     re-resizable: "npm:^6.11.2"
     to-px: "npm:^1.1.0"
@@ -321,7 +322,7 @@ __metadata:
     react: ^18.3.1
     react-dom: ^18.3.1
     react-table: ^7.8.0
-  checksum: 10c0/0d78986b5ae5009f9107cfef3763791e78d1f65ac509bcf4abbdd71bd62ba1b4780016b349bb7c12fd987cd8a2903bbdc09ef06ccd535afcfaf648e01872a943
+  checksum: 10c0/c45a5f0cb12d81f7ef988e1a4a956038aa2e961126c719de6c9d250e378738172fd444980aa2655685b1fcf495e9f283afb88622051c3c357ed394e0464be523
   languageName: node
   linkType: hard
 
@@ -670,6 +671,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/react-table@npm:^8.21.3":
+  version: 8.21.3
+  resolution: "@tanstack/react-table@npm:8.21.3"
+  dependencies:
+    "@tanstack/table-core": "npm:8.21.3"
+  peerDependencies:
+    react: ">=16.8"
+    react-dom: ">=16.8"
+  checksum: 10c0/85d1d0fcb690ecc011f68a5a61c96f82142e31a0270dcf9cbc699a6f36715b1653fe6ff1518302a6d08b7093351fc4cabefd055a7db3cd8ac01e068956b0f944
+  languageName: node
+  linkType: hard
+
+"@tanstack/table-core@npm:8.21.3":
+  version: 8.21.3
+  resolution: "@tanstack/table-core@npm:8.21.3"
+  checksum: 10c0/40e3560e6d55e07cc047024aa7f83bd47a9323d21920d4adabba8071fd2d21230c48460b26cedf392588f8265b9edc133abb1b0d6d0adf4dae0970032900a8c9
+  languageName: node
+  linkType: hard
+
 "@types/estree@npm:1.0.8, @types/estree@npm:^1.0.0":
   version: 1.0.8
   resolution: "@types/estree@npm:1.0.8"
@@ -690,24 +710,6 @@ __metadata:
   peerDependencies:
     "@types/react": ^18.0.0
   checksum: 10c0/8bd309e2c3d1604a28a736a24f96cbadf6c05d5288cfef8883b74f4054c961b6b3a5e997fd5686e492be903c8f3380dba5ec017eff3906b1256529cd2d39603e
-  languageName: node
-  linkType: hard
-
-"@types/react-table@npm:^7.7.20":
-  version: 7.7.20
-  resolution: "@types/react-table@npm:7.7.20"
-  dependencies:
-    "@types/react": "npm:*"
-  checksum: 10c0/293cffe798bbb3c483af1f704e289681517da376edfa113a71f248cb626115999ce736972f38d85eb14dbc6e126cca89db678fb0cea9fb2acfb2f343130f02a0
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:*":
-  version: 19.2.14
-  resolution: "@types/react@npm:19.2.14"
-  dependencies:
-    csstype: "npm:^3.2.2"
-  checksum: 10c0/7d25bf41b57719452d86d2ac0570b659210402707313a36ee612666bf11275a1c69824f8c3ee1fdca077ccfe15452f6da8f1224529b917050eb2d861e52b59b7
   languageName: node
   linkType: hard
 
@@ -837,20 +839,18 @@ __metadata:
   resolution: "augmented-authoring@workspace:."
   dependencies:
     "@apollo/client": "npm:^3.11.0"
-    "@jahia/moonstone": "npm:~2.17.3"
+    "@jahia/moonstone": "file:/tmp/moonstone"
     "@jahia/ui-extender": "npm:^1.2.0"
     "@jahia/vite-federation-plugin": "npm:^0.1.1"
     "@types/prop-types": "npm:^15"
     "@types/react": "npm:^18.3.28"
     "@types/react-dom": "npm:^18"
-    "@types/react-table": "npm:^7.7.20"
     graphql: "npm:^16.13.1"
     i18next: "npm:^20.6.1"
     prop-types: "npm:^15.8.1"
     react: "npm:^18.3.1"
     react-dom: "npm:^18.3.1"
     react-i18next: "npm:^11.2.2"
-    react-table: "npm:^7.8.0"
     typescript: "npm:^5.9.3"
     vite: "npm:^7.3.1"
   languageName: unknown
@@ -2241,15 +2241,6 @@ __metadata:
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
   checksum: 10c0/33977da7a5f1a287936a0c85639fec6ca74f4f15ef1e59a6bc20338fc73dc69555381e211f7a3529b8150a1f71e4225525b41b60b52965bda53ce7d47377ada1
-  languageName: node
-  linkType: hard
-
-"react-table@npm:^7.8.0":
-  version: 7.8.0
-  resolution: "react-table@npm:7.8.0"
-  peerDependencies:
-    react: ^16.8.3 || ^17.0.0-0 || ^18.0.0
-  checksum: 10c0/592938cb331331a4b10a67e881458ccf590c16639e2781a0329ca0803bad92991c9b9a2a3b1db1dce0de9ad325195fc5b38e1ea13813f8a55a35c94dc194757a
   languageName: node
   linkType: hard
 

@@ -1,4 +1,5 @@
 import { ApolloClient, ApolloProvider, useApolloClient } from "@apollo/client";
+import type { NormalizedCacheObject } from "@apollo/client";
 import { DefaultEntry, PrimaryNavItem, Search } from "@jahia/moonstone";
 import { registry } from "@jahia/ui-extender";
 import i18n from "i18next";
@@ -9,13 +10,20 @@ import { AdminPanel } from "./AdminPanel.tsx";
 import { SearchModal } from "./SearchModal.tsx";
 import { setApolloClient } from "./apolloClientBridge.ts";
 
-// Captures jcontent's Apollo client as soon as the nav renders (app startup),
-// making it available to the modal without requiring an admin panel visit first.
-const NavSearchButton: React.FC = () => {
+// Both NavSearchButton and CaptureApolloClient live inside jcontent's
+// ApolloProvider tree, so useApolloClient() gives us the host's client.
+// We store it in the bridge so our separate React roots (modal, etc.) can
+// use it without needing their own provider.
+function useStoreApolloClient() {
   const client = useApolloClient();
   useEffect(() => {
-    setApolloClient(client as ApolloClient<object>);
+    setApolloClient(client as ApolloClient<NormalizedCacheObject>);
   }, [client]);
+}
+// Captures jcontent's Apollo client as soon as the primary nav renders
+// (i.e. at app startup, before the admin panel is ever visited).
+const NavSearchButton: React.FC = () => {
+  useStoreApolloClient();
   return (
     <PrimaryNavItem
       icon={<Search />}
@@ -25,13 +33,10 @@ const NavSearchButton: React.FC = () => {
   );
 };
 
-// Rendered inside jcontent's ApolloProvider tree to capture its client
-// and make it available to separate React roots (e.g. the search modal).
+// Fallback capture: ensures the client is stored even if the nav item above
+// never renders (e.g. the nav is hidden or the feature flag is off).
 const CaptureApolloClient: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const client = useApolloClient();
-  useEffect(() => {
-    setApolloClient(client as ApolloClient<object>);
-  }, [client]);
+  useStoreApolloClient();
   return <>{children}</>;
 };
 
