@@ -224,7 +224,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         label: t("search.col.title", "Title & excerpt"),
         width: "64%",
         render: (_value: unknown, row: SearchHit) => (
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, width: "100%", padding: "8px 0" }}>
             <div style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {row.displayableName}
             </div>
@@ -235,6 +235,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
                   color: "#374151",
                   marginTop: "3px",
                   overflow: "hidden",
+                  whiteSpace: "normal",
                   display: "-webkit-box",
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: "vertical",
@@ -284,7 +285,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         }}
       >
         {defaultRender({
-          actions: (
+          actionsOnHover: (
             <Tooltip label={t("search.action.edit", "Edit")}>
               <Button
                 size="big"
@@ -311,6 +312,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
       <style>{`
         .augmented-search-input .moonstone-input { min-height: 36px !important; font-size: 16px !important; }
         .augmented-search-results thead { display: none; }
+        .augmented-search-results .moonstone-tableCell:first-child { overflow: visible !important; }
         .augmented-search-results .moonstone-tableCellActions { align-self: stretch; display: flex; align-items: center; justify-content: flex-end; }
         .augmented-search-results .moonstone-tableRow:focus { outline: none; border-radius: 6px; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-accent); }
         .augmented-search-results em { font-weight: 700; font-style: italic; color: var(--color-accent); }
