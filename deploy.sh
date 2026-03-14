@@ -17,7 +17,7 @@ fi
 # ---------------------------------------------------------------------------
 echo "==> Building module..."
 cd "$SCRIPT_DIR"
-mvn clean package -q
+mvn clean install -q
 echo "    Build complete."
 
 # ---------------------------------------------------------------------------
@@ -32,18 +32,12 @@ echo "==> JAR: $(basename "$JAR") ($(du -h "$JAR" | cut -f1))"
 
 # ---------------------------------------------------------------------------
 # 3. Deploy via Jahia provisioning API
-#    The script must be sent as a YAML file with content-type text/yaml.
 # ---------------------------------------------------------------------------
-PROVISIONING_YAML="- installOrUpgradeBundle: '\$fileRef:bundle'
-  autoStart: true"
-
-YAML_TMP=$(mktemp /tmp/jahia-provisioning-XXXXXX.yaml)
-echo "$PROVISIONING_YAML" > "$YAML_TMP"
-trap 'rm -f "$YAML_TMP"' EXIT
+JAR_NAME="$(basename "$JAR")"
+SCRIPT_JSON="[{\"installBundle\":\"$JAR_NAME\", \"autoStart\": true, \"forceUpdate\": true, \"uninstallPreviousVersion\": true}]"
 
 echo "==> Sending provisioning request to $JAHIA_URL/modules/api/provisioning ..."
-echo "    Provisioning script:"
-echo "$PROVISIONING_YAML" | sed 's/^/      /'
+echo "    Script: $SCRIPT_JSON"
 echo ""
 
 HTTP_RESPONSE=$(curl \
@@ -52,9 +46,10 @@ HTTP_RESPONSE=$(curl \
   --max-time 120 \
   --write-out "\nHTTP_STATUS:%{http_code}" \
   -u "$JAHIA_USER:$JAHIA_PASS" \
-  -F "script=@$YAML_TMP;type=text/yaml" \
-  -F "bundle=@$JAR;type=application/java-archive" \
-  "$JAHIA_URL/modules/api/provisioning")
+  -X POST \
+  "$JAHIA_URL/modules/api/provisioning" \
+  --form "script=$SCRIPT_JSON" \
+  --form "file=@$JAR")
 
 HTTP_BODY=$(echo "$HTTP_RESPONSE" | sed '/^HTTP_STATUS:/d')
 HTTP_STATUS=$(echo "$HTTP_RESPONSE" | grep "^HTTP_STATUS:" | cut -d: -f2)

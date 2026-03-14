@@ -82,7 +82,14 @@ export const SearchModal = () => {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <SearchContent focusOnField onNavigate={() => setIsOpen(false)} />
+        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <SearchContent focusOnField onNavigate={() => setIsOpen(false)} />
+          </div>
+          <div style={{ borderTop: "1px solid rgba(0,0,0,0.08)", marginTop: "12px", paddingTop: "8px", fontSize: "13px", color: "#6b7280", display: "flex", justifyContent: "flex-end" }}>
+          <strong style={{ color: "#16a34a", fontSize: "15px" }}> Built&nbsp; - {__BUILD_TIME__}</strong>
+          </div>
+        </div>
       </div>
     </div>
     </ApolloProvider>,

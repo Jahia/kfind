@@ -142,7 +142,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
 
   const triggerSearch = (value: string) => {
     const trimmed = value.trim();
-    if (!trimmed) return;
+    if (trimmed.length < 3) return;
     currentQueryRef.current = trimmed;
     loadingPageRef.current = 0;
     void runSearch({
@@ -196,6 +196,13 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (searchValue.trim().length < 3) {
+      setAllHits([]);
+      setTotalHits(0);
+      setHasMore(false);
+      currentQueryRef.current = "";
+      return;
+    }
     debounceRef.current = setTimeout(() => {
       triggerSearch(searchValue);
     }, 400);
