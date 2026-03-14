@@ -116,6 +116,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
   const loadingPageRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const inputWrapperRef = useRef<HTMLDivElement>(null);
   // Stable ref to the "load next page" function so the IntersectionObserver
   // (mounted once) always calls the latest version without needing to be
   // re-created on every render.
@@ -160,6 +161,23 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
     });
   };
 
+  // Keep the moonstone clear button out of the tab order — moonstone doesn't
+  // expose a prop for this, so we patch it via a MutationObserver that fires
+  // whenever the button is added to (or removed from) the DOM.
+  useEffect(() => {
+    const wrapper = inputWrapperRef.current;
+    if (!wrapper) return;
+    const patch = () => {
+      wrapper.querySelectorAll<HTMLElement>(".moonstone-baseInput_clearButton").forEach((el) => {
+        el.tabIndex = -1;
+      });
+    };
+    patch();
+    const observer = new MutationObserver(patch);
+    observer.observe(wrapper, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
   // Set up IntersectionObserver once; it calls the ref so it never goes stale
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -197,7 +215,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
       {
         key: "displayableName" as const,
         label: t("search.col.title", "Title & excerpt"),
-        width: "60%",
+        width: "64%",
         render: (_value: unknown, row: SearchHit) => (
           <div style={{ overflow: "hidden", maxHeight: "52px" }}>
             <div style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -223,11 +241,11 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
           </div>
         ),
       },
-      { key: "nodeType" as const, label: t("search.col.type", "Type"), width: "15%" },
+      { key: "nodeType" as const, label: t("search.col.type", "Type"), width: "16%" },
       {
         key: "lastModified" as const,
         label: t("search.col.lastModified", "Last modified"),
-        width: "25%",
+        width: "12%",
         render: (_value: unknown, row: SearchHit) => (
           <div style={{ fontSize: "12px" }}>
             <div>by {row.lastModifiedBy}</div>
@@ -245,14 +263,18 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         key={row.id}
         style={{ height: "64px", cursor: "pointer" }}
         onClick={() => { locateInJContent(row.original.path); onNavigate?.(); }}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          if (e.key === "Enter") { locateInJContent(row.original.path); onNavigate?.(); }
+        }}
       >
         {defaultRender({
-          actionsOnHover: (
+          actions: (
             <Tooltip label={t("search.action.edit", "Edit")}>
               <Button
                 size="big"
                 variant="ghost"
                 icon={<Edit width={24} height={24} />}
+                tabIndex={-1}
                 onClick={(e) => {
                   e.stopPropagation();
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -272,10 +294,11 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
       {/* Force Moonstone input height; sticky table header within the scroll container */}
       <style>{`
         .augmented-search-input .moonstone-input { min-height: 36px !important; font-size: 16px !important; }
-        .augmented-search-results thead { position: sticky; top: 0; z-index: 1; background: var(--color-white, #fff); }
+        .augmented-search-results thead { display: none; }
+        .augmented-search-results .moonstone-tableCellActions { align-self: stretch; display: flex; align-items: center; justify-content: flex-end; }
       `}</style>
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-        <div style={{ flex: 1, fontSize: "1.5rem", minHeight: "36px" }} className="augmented-search-input">
+        <div ref={inputWrapperRef} style={{ flex: 1, fontSize: "1.5rem", minHeight: "36px" }} className="augmented-search-input">
           <Input
             size="big"
             placeholder={t("search.placeholder", "Search…")}

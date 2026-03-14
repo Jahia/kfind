@@ -10,7 +10,7 @@ export const SearchModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [apolloClient, setApolloClientState] = useState(getApolloClient);
 
-  // Wait for jcontent's Apollo client to be captured from the admin panel tree
+  // Wait for jcontent's Apollo client to be captured from the primary nav tree
   useEffect(() => {
     onApolloClientReady(() => setApolloClientState(getApolloClient()));
   }, []);
@@ -72,8 +72,8 @@ export const SearchModal = () => {
           backdropFilter: "blur(8px)",
           borderRadius: "8px",
           padding: "24px",
-          width: "75vw",
-          maxWidth: "75vw",
+          width: "60vw",
+          maxWidth: "60vw",
           height: "75vh",
           overflow: "hidden",
           boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
