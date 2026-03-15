@@ -23,6 +23,46 @@ const stateContainer: React.CSSProperties = { display: "flex", flexDirection: "c
 const stateHeading: React.CSSProperties = { fontSize: "26px", fontWeight: 800, color: "var(--color-dark)", letterSpacing: "-0.5px" };
 const stateBody: React.CSSProperties = { fontSize: "14px", color: "var(--color-dark)", textAlign: "center", maxWidth: "300px", lineHeight: 1.6 };
 
+const ROW_HEIGHT = "96px";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const editNode = (path: string) => (window.parent as any).CE_API?.edit({ path });
+
+const SEARCH_PANEL_CSS = `
+        /* Force Moonstone input to be taller and more readable */
+        .augmented-search-input .moonstone-input { min-height: 36px !important; font-size: 16px !important; }
+
+        /* Hide the auto-generated table header — we don't need column labels in the search UI */
+        .augmented-search-results thead { display: none; }
+
+        /* Allow the title/excerpt cell to overflow vertically so 2-line clamp works.
+           Moonstone's moonstone-nowrap class otherwise collapses the cell to 1 line. */
+        .augmented-search-results .moonstone-tableCell:first-child { overflow: visible !important; }
+
+        /* Ensure the hover-actions cell stretches to full row height and right-aligns */
+        .augmented-search-results .moonstone-tableCellActions { align-self: stretch; display: flex; align-items: center; justify-content: flex-end; padding-right: 2px; }
+
+        /* Remove Moonstone's light gray row border-bottom */
+        .augmented-search-results .moonstone-tableRow { border-bottom: 1px solid var(--color-gray) !important; margin-right: 8px; padding: 0 var(--spacing-small); }
+
+        /* Keyboard focus ring */
+        .augmented-search-results .moonstone-tableRow:focus { outline: none; border-radius: 6px; box-shadow: 0 0 0 2px var(--color-white), 0 0 0 4px var(--color-accent); }
+        /* Mouse hover: subtle background darkening, no outline */
+        .augmented-search-results .moonstone-tableRow:hover:not(:focus) { outline: none; background-color: rgba(0, 0, 0, 0.04); }
+
+        /* Highlight matched terms (Jahia wraps them in <em> inside excerpt HTML) */
+        .augmented-search-results em { font-weight: 700; font-style: italic; color: var(--color-accent); }
+
+        /* Skeleton shimmer animation for the loading state */
+        @keyframes shimmer { 0% { background-position: -600px 0; } 100% { background-position: 600px 0; } }
+        .augmented-skeleton {
+          background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
+          background-size: 600px 100%;
+          animation: shimmer 1.2s infinite linear;
+          border-radius: 4px;
+        }
+      `;
+
 export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) => {
   const { t } = useTranslation();
   const [searchValue, setSearchValue] = useState("");
@@ -211,11 +251,11 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
     (row: Row<SearchHit>, defaultRender: (opts?: { actions?: React.ReactNode; actionsOnHover?: React.ReactNode }) => React.ReactNode) => (
       <TableRow
         key={row.id}
-        style={{ height: "96px", cursor: "pointer" }}
+        style={{ height: ROW_HEIGHT, cursor: "pointer" }}
         onClick={() => { locateInJContent(row.original.path); onNavigate?.(); }}
         onKeyDown={(e: React.KeyboardEvent) => {
           if (e.key === "Enter") { locateInJContent(row.original.path); onNavigate?.(); return; }
-          if (e.key === "e" || e.key === "E") { e.preventDefault(); (window.parent as any).CE_API?.edit({ path: row.original.path }); return; }
+          if (e.key === "e" || e.key === "E") { e.preventDefault(); editNode(row.original.path); return; }
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault();
             const rows = Array.from(
@@ -238,8 +278,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
                 tabIndex={-1}
                 onClick={(e) => {
                   e.stopPropagation();
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (window.parent as any).CE_API?.edit({ path: row.original.path });
+                  editNode(row.original.path);
                 }}
               />
             </Tooltip>
@@ -252,44 +291,12 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
 
   // Compute once per render; used across empty state, skeleton, no-results, and no-results text
   const trimmedQuery = searchValue.trim();
+  const searchEnabled = isSiteIndexed !== false;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px", height: "100%" }}>
       {/* Force Moonstone input height; sticky table header within the scroll container */}
-      <style>{`
-        /* Force Moonstone input to be taller and more readable */
-        .augmented-search-input .moonstone-input { min-height: 36px !important; font-size: 16px !important; }
-
-        /* Hide the auto-generated table header — we don't need column labels in the search UI */
-        .augmented-search-results thead { display: none; }
-
-        /* Allow the title/excerpt cell to overflow vertically so 2-line clamp works.
-           Moonstone's moonstone-nowrap class otherwise collapses the cell to 1 line. */
-        .augmented-search-results .moonstone-tableCell:first-child { overflow: visible !important; }
-
-        /* Ensure the hover-actions cell stretches to full row height and right-aligns */
-        .augmented-search-results .moonstone-tableCellActions { align-self: stretch; display: flex; align-items: center; justify-content: flex-end; padding-right: 2px; }
-
-        /* Remove Moonstone's light gray row border-bottom */
-        .augmented-search-results .moonstone-tableRow { border-bottom: 1px solid var(--color-gray) !important; margin-right: 8px; padding: 0 var(--spacing-small); }
-
-        /* Keyboard focus ring */
-        .augmented-search-results .moonstone-tableRow:focus { outline: none; border-radius: 6px; box-shadow: 0 0 0 2px var(--color-white), 0 0 0 4px var(--color-accent); }
-        /* Mouse hover: subtle background darkening, no outline */
-        .augmented-search-results .moonstone-tableRow:hover:not(:focus) { outline: none; background-color: rgba(0, 0, 0, 0.04); }
-
-        /* Highlight matched terms (Jahia wraps them in <em> inside excerpt HTML) */
-        .augmented-search-results em { font-weight: 700; font-style: italic; color: var(--color-accent); }
-
-        /* Skeleton shimmer animation for the loading state */
-        @keyframes shimmer { 0% { background-position: -600px 0; } 100% { background-position: 600px 0; } }
-        .augmented-skeleton {
-          background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
-          background-size: 600px 100%;
-          animation: shimmer 1.2s infinite linear;
-          border-radius: 4px;
-        }
-      `}</style>
+      <style>{SEARCH_PANEL_CSS}</style>
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
         <div ref={inputWrapperRef} style={{ flex: 1, fontSize: "1.5rem", minHeight: "36px" }} className="augmented-search-input">
           <Input
@@ -297,8 +304,8 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
             placeholder={t("search.placeholder", "Search…")}
             value={searchValue}
             icon={<Search />}
-            focusOnField={focusOnField && isSiteIndexed !== false}
-            onChange={(e) => isSiteIndexed !== false && setSearchValue(e.target.value)}
+            focusOnField={focusOnField && searchEnabled}
+            onChange={(e) => { if (searchEnabled) setSearchValue(e.target.value); }}
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -331,7 +338,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         )}
 
         {/* ── Empty state (shown until user types 3+ chars) ── */}
-        {isSiteIndexed !== false && trimmedQuery.length < 3 && (
+        {searchEnabled && trimmedQuery.length < 3 && (
           <div style={stateContainer}>
             <div style={{ fontSize: "72px", lineHeight: 1 }}>🔍</div>
             <div style={stateHeading}>{t("search.empty.title", "Find anything.")}</div>
@@ -341,10 +348,10 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         )}
 
         {/* ── Skeleton loader (shown while first page is fetching) ── */}
-        {isSiteIndexed !== false && loading && allHits.length === 0 && trimmedQuery.length >= 3 && <SearchSkeleton />}
+        {searchEnabled && loading && allHits.length === 0 && trimmedQuery.length >= 3 && <SearchSkeleton />}
 
         {/* ── No results (only shown once the query has actually completed) ── */}
-        {isSiteIndexed !== false && trimmedQuery.length >= 3 && !loading && allHits.length === 0 && currentQueryRef.current === trimmedQuery && (
+        {searchEnabled && trimmedQuery.length >= 3 && !loading && allHits.length === 0 && currentQueryRef.current === trimmedQuery && (
           <div style={stateContainer}>
             <div style={{ fontSize: "72px", lineHeight: 1 }}>🕵️</div>
             <div style={stateHeading}>{t("search.noResults.title", "No results.")}</div>

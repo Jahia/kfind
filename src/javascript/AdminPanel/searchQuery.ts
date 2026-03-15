@@ -16,8 +16,6 @@ export const SEARCH_QUERY = gql`
           path
           displayableName
           excerpt
-          lastModified
-          lastModifiedBy
           nodeType
         }
       }
@@ -42,8 +40,6 @@ export type SearchHit = {
   id: string;
   path: string;
   displayableName: string;
-  excerpt: string;
-  lastModified: string;
-  lastModifiedBy: string;
+  excerpt: string | null;
   nodeType: string;
 };
