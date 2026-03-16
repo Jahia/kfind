@@ -42,65 +42,85 @@ export const SearchModal = () => {
     window.addEventListener("augmented-authoring:open-search", handleOpenEvent);
     return () => {
       targets.forEach((t) => t.removeEventListener("keydown", handleKeyDown));
-      window.removeEventListener("augmented-authoring:open-search", handleOpenEvent);
+      window.removeEventListener(
+        "augmented-authoring:open-search",
+        handleOpenEvent,
+      );
     };
   }, []);
 
-  if (!isOpen) return null;
-  if (!apolloClient) return null;
+  if (!isOpen || !apolloClient) return null;
 
-  return createPortal(
+  return (
     <ApolloProvider client={apolloClient}>
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={t("search.modal.label", "Search")}
-      style={{
-        position: "fixed",
-        inset: 0,
-        /* Semi-transparent backdrop dims the page without fully hiding it */
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        zIndex: 1000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
-      }}
-      onClick={() => setIsOpen(false)}
-    >
+      {/* Backdrop/Overlay */}
       <div
         style={{
-          /* Frosted-glass effect: slightly translucent white with blur */
-          background: "rgba(255, 255, 255, 0.76)",
-          backdropFilter: "blur(8px)",
-          borderRadius: "8px",
-          padding: "24px 28px",
-          width: "60vw",
-          maxWidth: "800px",
-          height: "88vh",
-          overflow: "hidden",
-          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
-          color: "var(--color-dark)",
-          fontSize: "15px",
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(20, 20, 40, 0.65)", // Overlay/backdrop color
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={() => setIsOpen(false)}
       >
-        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-          <div style={{ marginBottom: "16px" }}>
-            <div style={{ fontWeight: 700, fontSize: "20px", color: "var(--color-dark)" }}>
-              {t("search.modal.title", "Search in {{site}}", { site: getSiteKey() })}
+        {/* Modal Dialog */}
+        <div
+          style={{
+            background: "var(--color-light)", // Moonstone light background
+            borderRadius: "10px",
+            padding: "24px 28px",
+            width: "60vw",
+            maxWidth: "800px",
+            height: "88vh",
+            overflow: "hidden",
+            color: "var(--color-dark)",
+            display: "flex",
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("search.modal.label", "Search")}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div
+            style={{ display: "flex", flexDirection: "column", height: "100%" }}
+          >
+            <div style={{ marginBottom: "16px" }}>
+              <div
+                style={{
+                  fontWeight: 700,
+                  fontSize: "20px",
+                  color: "var(--color-dark)",
+                }}
+              >
+                {t("search.modal.title", "Search in {{site}}", {
+                  site: getSiteKey(),
+                })}
+              </div>
             </div>
-          </div>
-          <div style={{ flex: 1, minHeight: 0 }}>
-            <SearchContent focusOnField onNavigate={() => setIsOpen(false)} />
-          </div>
-          {/* Footer */}
-          <div style={{ borderTop: "1px solid var(--color-gray)", marginTop: "12px", paddingTop: "8px", fontSize: "13px", color: "var(--color-dark)" }}>
-            {t("search.modal.hint", "Press Ctrl+K or ⌘K to open · Esc to close · ↑↓ navigate · Enter to go · E to edit")}
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <SearchContent focusOnField onNavigate={() => setIsOpen(false)} />
+            </div>
+            {/* Footer */}
+            <div
+              style={{
+                borderTop: "1px solid var(--color-gray)",
+                marginTop: "12px",
+                paddingTop: "8px",
+                fontSize: "13px",
+                color: "var(--color-dark)",
+              }}
+            >
+              {t(
+                "search.modal.hint",
+                "Press Ctrl+K or ⌘K to open · Esc to close · ↑↓ navigate · Enter to go · E to edit",
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    </ApolloProvider>,
-    document.body
+    </ApolloProvider>
   );
 };

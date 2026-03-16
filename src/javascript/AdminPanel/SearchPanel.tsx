@@ -1,12 +1,35 @@
 import { useLazyQuery } from "@apollo/client";
-import { Button, DataTable, Edit, Input, Search, TableRow, Tooltip } from "@jahia/moonstone";
+import {
+  Button,
+  DataTable,
+  Edit,
+  Input,
+  Search,
+  TableRow,
+  Typography,
+  Tooltip,
+  Chip,
+} from "@jahia/moonstone";
 import type { Row } from "@tanstack/react-table";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
-import { SEARCH_QUERY, SITE_INDEX_QUERY, type SearchHit } from "./searchQuery.ts";
-import { getSiteKey, getSearchLanguage, locateInJContent } from "./searchUtils.ts";
+import {
+  SEARCH_QUERY,
+  SITE_INDEX_QUERY,
+  type SearchHit,
+} from "./searchQuery.ts";
+import {
+  getSiteKey,
+  getSearchLanguage,
+  locateInJContent,
+} from "./searchUtils.ts";
 import { SearchSkeleton } from "./SearchSkeleton.tsx";
-
 
 type SearchContentProps = {
   focusOnField?: boolean;
@@ -19,14 +42,34 @@ const siteIndexCache = new Map<string, boolean>();
 
 // Shared styles for the empty-state and no-results centered panels.
 // Defined outside the component so they are stable object references.
-const stateContainer: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "80%", gap: "16px", userSelect: "none" };
-const stateHeading: React.CSSProperties = { fontSize: "26px", fontWeight: 800, color: "var(--color-dark)", letterSpacing: "-0.5px" };
-const stateBody: React.CSSProperties = { fontSize: "14px", color: "var(--color-dark)", textAlign: "center", maxWidth: "300px", lineHeight: 1.6 };
+const stateContainer: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "80%",
+  gap: "16px",
+  userSelect: "none",
+};
+const stateHeading: React.CSSProperties = {
+  fontSize: "26px",
+  fontWeight: 800,
+  color: "var(--color-dark)",
+  letterSpacing: "-0.5px",
+};
+const stateBody: React.CSSProperties = {
+  fontSize: "14px",
+  color: "var(--color-dark)",
+  textAlign: "center",
+  maxWidth: "300px",
+  lineHeight: 1.6,
+};
 
 const ROW_HEIGHT = "96px";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const editNode = (path: string) => (window.parent as any).CE_API?.edit({ path });
+const editNode = (path: string) =>
+  (window.parent as any).CE_API?.edit({ path });
 
 const SEARCH_PANEL_CSS = `
         /* Force Moonstone input to be taller and more readable */
@@ -63,7 +106,10 @@ const SEARCH_PANEL_CSS = `
         }
       `;
 
-export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) => {
+export const SearchContent = ({
+  focusOnField,
+  onNavigate,
+}: SearchContentProps) => {
   const { t } = useTranslation();
   const [searchValue, setSearchValue] = useState("");
   const [allHits, setAllHits] = useState<SearchHit[]>([]);
@@ -101,7 +147,8 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
       setTotalHits(total);
       setAllHits((prev) => {
         // Page 0 = fresh search → replace. Page N > 0 → append.
-        const updated = loadingPageRef.current === 0 ? newHits : [...prev, ...newHits];
+        const updated =
+          loadingPageRef.current === 0 ? newHits : [...prev, ...newHits];
         // Derive hasMore from the freshly computed list to avoid a render lag.
         setHasMore(updated.length < total);
         return updated;
@@ -125,7 +172,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
     if (isSiteIndexed === null) {
       void checkSiteIndex({ variables: { path: `/sites/${getSiteKey()}` } });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const triggerSearch = (value: string) => {
@@ -134,7 +181,12 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
     currentQueryRef.current = trimmed;
     loadingPageRef.current = 0;
     void runSearch({
-      variables: { q: trimmed, siteKeys: [getSiteKey()], language: getSearchLanguage(), page: 0 },
+      variables: {
+        q: trimmed,
+        siteKeys: [getSiteKey()],
+        language: getSearchLanguage(),
+        page: 0,
+      },
     });
   };
 
@@ -145,7 +197,12 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
     const nextPage = loadingPageRef.current + 1;
     loadingPageRef.current = nextPage;
     void runSearch({
-      variables: { q: currentQueryRef.current, siteKeys: [getSiteKey()], language: getSearchLanguage(), page: nextPage },
+      variables: {
+        q: currentQueryRef.current,
+        siteKeys: [getSiteKey()],
+        language: getSearchLanguage(),
+        page: nextPage,
+      },
     });
   };
 
@@ -156,9 +213,11 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
     const wrapper = inputWrapperRef.current;
     if (!wrapper) return;
     const patch = () => {
-      wrapper.querySelectorAll<HTMLElement>(".moonstone-baseInput_clearButton").forEach((el) => {
-        el.tabIndex = -1;
-      });
+      wrapper
+        .querySelectorAll<HTMLElement>(".moonstone-baseInput_clearButton")
+        .forEach((el) => {
+          el.tabIndex = -1;
+        });
     };
     patch();
     const observer = new MutationObserver(patch);
@@ -175,11 +234,11 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
       (entries) => {
         if (entries[0].isIntersecting) loadNextPageFnRef.current();
       },
-      { root: container, threshold: 0.1 }
+      { root: container, threshold: 0.1 },
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -197,7 +256,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchValue]);
 
   // `key` values must be `as const` so TypeScript narrows them to the literal
@@ -214,57 +273,90 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         render: (_value: unknown, row: SearchHit) => (
           <div style={{ minWidth: 0, width: "100%", padding: "6px 0" }}>
             {/* Row 1: displayable name */}
-            <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {row.displayableName.length > 80 ? row.displayableName.slice(0, 80) + "…" : row.displayableName}
+            <div>
+              <Typography variant="subHeading">
+                {row.displayableName.length > 80
+                  ? row.displayableName.slice(0, 80) + "…"
+                  : row.displayableName}{" "}
+              </Typography>
             </div>
-            {/* Row 2: type · path */}
-            <div style={{ fontSize: "11px", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              <span style={{ fontWeight: 500 }}>{row.nodeType}</span>
-              <span style={{ margin: "0 5px", opacity: 0.4 }}>·</span>
-              <span style={{ opacity: 0.7 }}>{row.path}</span>
+            {/* Row 2: type path */}
+            <div
+              style={{
+                marginTop: "2px",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                display: "flex",
+              }}
+            >
+              <Chip color="accent" label={row.nodeType} />
+              <Typography variant="caption">{row.path}</Typography>
             </div>
             {/* Row 3: excerpt */}
             {row.excerpt && (
               <div
                 style={{
-                  fontSize: "12px",
-                  color: "var(--color-gray_dark)",
                   marginTop: "3px",
                   overflow: "hidden",
                   whiteSpace: "normal",
                   display: "-webkit-box",
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: "vertical",
-                  lineHeight: "1.5",
                 }}
-                dangerouslySetInnerHTML={{ __html: row.excerpt }}
-              />
+              >
+                <Typography variant="body">
+                  <span dangerouslySetInnerHTML={{ __html: row.excerpt }} />
+                </Typography>
+              </div>
             )}
           </div>
         ),
       },
     ],
-    [t]
-  );  // Memoized so DataTable gets a stable renderRow reference — prevents rows
+    [t],
+  ); // Memoized so DataTable gets a stable renderRow reference — prevents rows
   // from re-rendering on every keystroke while results are already visible.
   const renderRow = useCallback(
-    (row: Row<SearchHit>, defaultRender: (opts?: { actions?: React.ReactNode; actionsOnHover?: React.ReactNode }) => React.ReactNode) => (
+    (
+      row: Row<SearchHit>,
+      defaultRender: (opts?: {
+        actions?: React.ReactNode;
+        actionsOnHover?: React.ReactNode;
+      }) => React.ReactNode,
+    ) => (
       <TableRow
         key={row.id}
         style={{ height: ROW_HEIGHT, cursor: "pointer" }}
-        onClick={() => { locateInJContent(row.original.path); onNavigate?.(); }}
+        onClick={() => {
+          locateInJContent(row.original.path);
+          onNavigate?.();
+        }}
         onKeyDown={(e: React.KeyboardEvent) => {
-          if (e.key === "Enter") { locateInJContent(row.original.path); onNavigate?.(); return; }
-          if (e.key === "e" || e.key === "E") { e.preventDefault(); editNode(row.original.path); return; }
+          if (e.key === "Enter") {
+            locateInJContent(row.original.path);
+            onNavigate?.();
+            return;
+          }
+          if (e.key === "e" || e.key === "E") {
+            e.preventDefault();
+            editNode(row.original.path);
+            return;
+          }
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault();
             const rows = Array.from(
-              scrollContainerRef.current?.querySelectorAll<HTMLElement>(".moonstone-tableRow[tabindex]") ?? []
+              scrollContainerRef.current?.querySelectorAll<HTMLElement>(
+                ".moonstone-tableRow[tabindex]",
+              ) ?? [],
             );
             const idx = rows.indexOf(e.currentTarget as HTMLElement);
             const next = e.key === "ArrowDown" ? idx + 1 : idx - 1;
             if (next >= 0 && next < rows.length) rows[next].focus();
-            else if (next < 0) inputWrapperRef.current?.querySelector<HTMLElement>("input")?.focus();
+            else if (next < 0)
+              inputWrapperRef.current
+                ?.querySelector<HTMLElement>("input")
+                ?.focus();
           }
         }}
       >
@@ -286,7 +378,7 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         })}
       </TableRow>
     ),
-    [t, onNavigate]
+    [t, onNavigate],
   );
 
   // Compute once per render; used across empty state, skeleton, no-results, and no-results text
@@ -294,22 +386,38 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
   const searchEnabled = isSiteIndexed !== false;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px", height: "100%" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+        height: "100%",
+      }}
+    >
       {/* Force Moonstone input height; sticky table header within the scroll container */}
       <style>{SEARCH_PANEL_CSS}</style>
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-        <div ref={inputWrapperRef} style={{ flex: 1, fontSize: "1.5rem", minHeight: "36px" }} className="augmented-search-input">
+        <div
+          ref={inputWrapperRef}
+          style={{ flex: 1, fontSize: "1.5rem", minHeight: "36px" }}
+          className="augmented-search-input"
+        >
           <Input
             size="big"
             placeholder={t("search.placeholder", "Search…")}
             value={searchValue}
             icon={<Search />}
             focusOnField={focusOnField && searchEnabled}
-            onChange={(e) => { if (searchEnabled) setSearchValue(e.target.value); }}
+            onChange={(e) => {
+              if (searchEnabled) setSearchValue(e.target.value);
+            }}
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") {
                 e.preventDefault();
-                const first = scrollContainerRef.current?.querySelector<HTMLElement>(".moonstone-tableRow[tabindex]");
+                const first =
+                  scrollContainerRef.current?.querySelector<HTMLElement>(
+                    ".moonstone-tableRow[tabindex]",
+                  );
                 first?.focus();
               }
             }}
@@ -327,13 +435,28 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         </span>
       )}
 
-      <div ref={scrollContainerRef} style={{ overflowY: "auto", flex: 1, minWidth: 0, padding: "4px 8px 0" }}>
+      <div
+        ref={scrollContainerRef}
+        style={{
+          overflowY: "auto",
+          flex: 1,
+          minWidth: 0,
+          padding: "4px 8px 0",
+        }}
+      >
         {/* ── Site not indexed ── */}
         {isSiteIndexed === false && (
           <div style={stateContainer}>
             <div style={{ fontSize: "72px", lineHeight: 1 }}>🚫</div>
-            <div style={stateHeading}>{t("search.notIndexed.title", "Search unavailable.")}</div>
-            <div style={stateBody}>{t("search.notIndexed.hint", "This site is not indexed for augmented search. Ask an administrator to enable it.")}</div>
+            <div style={stateHeading}>
+              {t("search.notIndexed.title", "Search unavailable.")}
+            </div>
+            <div style={stateBody}>
+              {t(
+                "search.notIndexed.hint",
+                "This site is not indexed for augmented search. Ask an administrator to enable it.",
+              )}
+            </div>
           </div>
         )}
 
@@ -341,23 +464,44 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         {searchEnabled && trimmedQuery.length < 3 && (
           <div style={stateContainer}>
             <div style={{ fontSize: "72px", lineHeight: 1 }}>🔍</div>
-            <div style={stateHeading}>{t("search.empty.title", "Find anything.")}</div>
-            <div style={stateBody}>{t("search.empty.hint", "Pages, content, documents, ...")}</div>
-            <div style={stateBody}>{t("search.empty.hint2", "Just start typing (3 chars min).")}</div>
+            <div style={stateHeading}>
+              {t("search.empty.title", "Find anything.")}
+            </div>
+            <div style={stateBody}>
+              {t("search.empty.hint", "Pages, content, documents, ...")}
+            </div>
+            <div style={stateBody}>
+              {t("search.empty.hint2", "Just start typing (3 chars min).")}
+            </div>
           </div>
         )}
 
         {/* ── Skeleton loader (shown while first page is fetching) ── */}
-        {searchEnabled && loading && allHits.length === 0 && trimmedQuery.length >= 3 && <SearchSkeleton />}
+        {searchEnabled &&
+          loading &&
+          allHits.length === 0 &&
+          trimmedQuery.length >= 3 && <SearchSkeleton />}
 
         {/* ── No results (only shown once the query has actually completed) ── */}
-        {searchEnabled && trimmedQuery.length >= 3 && !loading && allHits.length === 0 && currentQueryRef.current === trimmedQuery && (
-          <div style={stateContainer}>
-            <div style={{ fontSize: "72px", lineHeight: 1 }}>🕵️</div>
-            <div style={stateHeading}>{t("search.noResults.title", "No results.")}</div>
-            <div style={stateBody}>{t("search.noResults.hint", 'Nothing matched "{{q}}". Try different keywords or check for typos.', { q: trimmedQuery })}</div>
-          </div>
-        )}
+        {searchEnabled &&
+          trimmedQuery.length >= 3 &&
+          !loading &&
+          allHits.length === 0 &&
+          currentQueryRef.current === trimmedQuery && (
+            <div style={stateContainer}>
+              <div style={{ fontSize: "72px", lineHeight: 1 }}>🕵️</div>
+              <div style={stateHeading}>
+                {t("search.noResults.title", "No results.")}
+              </div>
+              <div style={stateBody}>
+                {t(
+                  "search.noResults.hint",
+                  'Nothing matched "{{q}}". Try different keywords or check for typos.',
+                  { q: trimmedQuery },
+                )}
+              </div>
+            </div>
+          )}
         <DataTable<SearchHit>
           className="augmented-search-results"
           data={allHits}
@@ -368,7 +512,14 @@ export const SearchContent = ({ focusOnField, onNavigate }: SearchContentProps) 
         {/* Sentinel triggers IntersectionObserver to load the next page */}
         <div ref={sentinelRef} style={{ height: "1px" }} />
         {loading && allHits.length > 0 && (
-          <div style={{ textAlign: "center", padding: "8px", fontSize: "12px", color: "var(--color-gray)" }}>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "8px",
+              fontSize: "12px",
+              color: "var(--color-gray)",
+            }}
+          >
             {t("search.loadingMore", "Loading more…")}
           </div>
         )}

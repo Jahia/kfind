@@ -7,6 +7,10 @@
     "git rm": true,
     "git add": true,
     "git commit": true,
-    "git push": true
+    "git push": true,
+    "/^sh deploy\\.sh$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
   }
 }

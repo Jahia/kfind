@@ -31,6 +31,8 @@ export const SITE_INDEX_QUERY = gql`
         isNodeType(
           type: { multi: ANY, types: ["jmix:augmentedSearchIndexableSite"] }
         )
+        uuid
+        workspace
       }
     }
   }
