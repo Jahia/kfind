@@ -57,7 +57,7 @@ export const SearchContent = ({
     <div>
       {/* ── Search input ── */}
       <div>
-        <div ref={inputWrapperRef} style={{ flex: 1, minHeight: "36px" }}>
+        <div ref={inputWrapperRef}>
           <Input
             size="big"
             placeholder={t("search.placeholder", "Search…")}

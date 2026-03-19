@@ -59,7 +59,14 @@ export const SearchModal = () => {
 
   return (
     <ApolloProvider client={apolloClient}>
-      <Modal isOpen={isOpen} onOpenChange={setIsOpen} size="large">
+      <style>{`.search-modal.moonstone-modal { top: 72px; bottom: 72px; height: auto; max-height: none; }`}</style>
+      <Modal
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
+        size="full"
+        className="search-modal"
+        style={{ width: "800px" }}
+      >
         <>
           <ModalHeader
             title={t("search.modal.title", "Search in {{site}}", {

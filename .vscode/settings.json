@@ -12,5 +12,6 @@
       "approve": true,
       "matchCommandLine": true
     }
-  }
+  },
+  "i18n-ally.keystyle": "nested"
 }
