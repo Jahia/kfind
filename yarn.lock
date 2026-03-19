@@ -309,9 +309,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jahia/moonstone@file:/tmp/moonstone::locator=augmented-authoring%40workspace%3A.":
+"@jahia/moonstone@file:/tmp/moonstone-pkg::locator=augmented-authoring%40workspace%3A.":
   version: 2.17.5
-  resolution: "@jahia/moonstone@file:/tmp/moonstone#/tmp/moonstone::hash=edde33&locator=augmented-authoring%40workspace%3A."
+  resolution: "@jahia/moonstone@file:/tmp/moonstone-pkg#/tmp/moonstone-pkg::hash=7373d9&locator=augmented-authoring%40workspace%3A."
   dependencies:
     "@floating-ui/react": "npm:^0.27.16"
     "@tanstack/react-table": "npm:^8.21.3"
@@ -322,7 +322,7 @@ __metadata:
     react: ^18.3.1
     react-dom: ^18.3.1
     react-table: ^7.8.0
-  checksum: 10c0/c45a5f0cb12d81f7ef988e1a4a956038aa2e961126c719de6c9d250e378738172fd444980aa2655685b1fcf495e9f283afb88622051c3c357ed394e0464be523
+  checksum: 10c0/0b24617281ae85265dce1352215789d75bebf783b560dcc397d4619997711ce491040ed4066c8df8fa7e1823f7628a3653347008ea97e596422204e77b5acf05
   languageName: node
   linkType: hard
 
@@ -839,7 +839,7 @@ __metadata:
   resolution: "augmented-authoring@workspace:."
   dependencies:
     "@apollo/client": "npm:^3.11.0"
-    "@jahia/moonstone": "file:/tmp/moonstone"
+    "@jahia/moonstone": "file:/tmp/moonstone-pkg"
     "@jahia/ui-extender": "npm:^1.2.0"
     "@jahia/vite-federation-plugin": "npm:^0.1.1"
     "@types/prop-types": "npm:^15"
