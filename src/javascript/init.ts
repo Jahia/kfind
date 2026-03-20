@@ -4,7 +4,7 @@ import { registerRoutes } from "./kFind/routes.tsx";
 export default function () {
   registry.add("callback", "kFind", {
     targets: ["jahiaApp-init:2"],
-    requireModuleInstalledOnSite: "kFind",
+    requireModuleInstalledOnSite: "kfind",
     callback: registerRoutes,
   });
 }

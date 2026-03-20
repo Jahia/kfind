@@ -21,7 +21,7 @@ t_build=$(date +%s)
 mvn -T 8 clean install -q
 echo "==> Build done in $(elapsed $t_build)"
 
-JAR="$(ls "$SCRIPT_DIR"/target/k-find-*.jar 2>/dev/null | grep -v sources | head -1)"
+JAR="$(ls "$SCRIPT_DIR"/target/kfind-*.jar 2>/dev/null | grep -v sources | head -1)"
 [[ -z "$JAR" ]] && { echo "✗ No JAR found in target/ after build." >&2; exit 1; }
 echo "==> JAR: $(basename "$JAR") ($(du -h "$JAR" | cut -f1))"
 

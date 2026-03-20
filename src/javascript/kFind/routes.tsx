@@ -33,7 +33,7 @@ const NavSearchButton: React.FC = () => {
 };
 
 export const registerRoutes = async () => {
-  await i18n.loadNamespaces("kFind");
+  await i18n.loadNamespaces("kfind");
 
   // Align i18next language with Jahia's UI language so our translations
   // resolve correctly regardless of which language the user has selected.
@@ -48,14 +48,14 @@ export const registerRoutes = async () => {
   modalContainer.id = "kFind-search-modal";
   document.body.appendChild(modalContainer);
   createRoot(modalContainer).render(
-    <I18nextProvider i18n={i18n} defaultNS="kFind">
+    <I18nextProvider i18n={i18n} defaultNS="kfind">
       <KFindModal />
     </I18nextProvider>,
   );
 
   registry.add("primary-nav-item", "kFind-search", {
     targets: ["nav-root-top:99"],
-    requireModuleInstalledOnSite: "kFind",
+    requireModuleInstalledOnSite: "kfind",
     render: () => <NavSearchButton />,
   });
 
