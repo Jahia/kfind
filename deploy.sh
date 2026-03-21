@@ -25,7 +25,7 @@ JAR="$(ls "$SCRIPT_DIR"/target/kfind-*.jar 2>/dev/null | grep -v sources | head 
 [[ -z "$JAR" ]] && { echo "✗ No JAR found in target/ after build." >&2; exit 1; }
 echo "==> JAR: $(basename "$JAR") ($(du -h "$JAR" | cut -f1))"
 
-SCRIPT_JSON="[{\"installBundle\":\"$(basename "$JAR")\", \"autoStart\": true, \"forceUpdate\": true, \"uninstallPreviousVersion\": true}]"
+SCRIPT_JSON="[{\"installModule\":\"$(basename "$JAR")\", \"autoStart\": true, \"forceUpdate\": true, \"uninstallPreviousVersion\": true}]"
 
 echo "==> Sending provisioning request to $JAHIA_URL/modules/api/provisioning ..."
 t_deploy=$(date +%s)

@@ -309,9 +309,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jahia/moonstone@file:./vendor/jahia-moonstone-2.17.5.tgz::locator=kFind%40workspace%3A.":
+"@jahia/moonstone@file:./vendor/jahia-moonstone-2.17.5.tgz::locator=kfind%40workspace%3A.":
   version: 2.17.5
-  resolution: "@jahia/moonstone@file:./vendor/jahia-moonstone-2.17.5.tgz#./vendor/jahia-moonstone-2.17.5.tgz::hash=066cec&locator=kFind%40workspace%3A."
+  resolution: "@jahia/moonstone@file:./vendor/jahia-moonstone-2.17.5.tgz#./vendor/jahia-moonstone-2.17.5.tgz::hash=066cec&locator=kfind%40workspace%3A."
   dependencies:
     "@floating-ui/react": "npm:^0.27.16"
     "@tanstack/react-table": "npm:^8.21.3"
@@ -1713,9 +1713,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kFind@workspace:.":
+"keygrip@npm:~1.1.0":
+  version: 1.1.0
+  resolution: "keygrip@npm:1.1.0"
+  dependencies:
+    tsscmp: "npm:1.0.6"
+  checksum: 10c0/2aceec1a1e642a0caf938044056ed67b1909cfe67a93a59b32aae2863e0f35a1a53782ecc8f9cd0e3bdb60863fa0f401ccbd257cd7dfae61915f78445139edea
+  languageName: node
+  linkType: hard
+
+"kfind@workspace:.":
   version: 0.0.0-use.local
-  resolution: "kFind@workspace:."
+  resolution: "kfind@workspace:."
   dependencies:
     "@apollo/client": "npm:^3.11.0"
     "@jahia/moonstone": "file:./vendor/jahia-moonstone-2.17.5.tgz"
@@ -1734,15 +1743,6 @@ __metadata:
     vite: "npm:^7.3.1"
   languageName: unknown
   linkType: soft
-
-"keygrip@npm:~1.1.0":
-  version: 1.1.0
-  resolution: "keygrip@npm:1.1.0"
-  dependencies:
-    tsscmp: "npm:1.0.6"
-  checksum: 10c0/2aceec1a1e642a0caf938044056ed67b1909cfe67a93a59b32aae2863e0f35a1a53782ecc8f9cd0e3bdb60863fa0f401ccbd257cd7dfae61915f78445139edea
-  languageName: node
-  linkType: hard
 
 "koa-compose@npm:^4.1.0":
   version: 4.1.0

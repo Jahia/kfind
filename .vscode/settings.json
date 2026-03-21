@@ -12,7 +12,8 @@
       "approve": true,
       "matchCommandLine": true
     },
-    "npx tsc": true
+    "npx tsc": true,
+    "git mv": true
   },
   "i18n-ally.keystyle": "nested"
 }
