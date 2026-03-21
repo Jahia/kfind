@@ -1,3 +1,17 @@
+/**
+ * Main search panel — thin composition layer.
+ *
+ * Delegates search logic entirely to `useSearchOrchestration` and renders
+ * five result sections in order:
+ *   1. UI Features (always, if enabled)
+ *   2. JCR Media (always, if enabled)
+ *   3. Augmented search (only when the site has augmented indexing)
+ *   4. JCR Pages (only when augmented is NOT available)
+ *   5. JCR Main Resources (only when augmented is NOT available)
+ *
+ * A global "no results" empty state is shown when all visible sections
+ * return empty after a completed query.
+ */
 import React, { useRef, useState } from "react";
 import { Close, EmptyData, Search } from "@jahia/moonstone";
 import { useTranslation } from "react-i18next";

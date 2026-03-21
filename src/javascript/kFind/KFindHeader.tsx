@@ -1,3 +1,18 @@
+/**
+ * Sticky header for the kFind search panel.
+ *
+ * Layout:
+ *   - Top row: "Welcome to kFind" title (left) + site/language info (right)
+ *   - Bottom row: search input with clear button
+ *
+ * Keyboard handling:
+ *   - ArrowDown from the input focuses the first result row.
+ *   - Enter fires a manual search trigger (for immediate re-query).
+ *
+ * The moonstone Input renders a clear button that is focusable by default;
+ * a MutationObserver patches its tabIndex to −1 so it doesn't interfere
+ * with the arrow-key navigation flow.
+ */
 import React, { useEffect, useRef } from "react";
 import { Input, Search, Typography } from "@jahia/moonstone";
 import { useTranslation } from "react-i18next";

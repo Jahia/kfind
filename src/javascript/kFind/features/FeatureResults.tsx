@@ -1,3 +1,13 @@
+/**
+ * Renders the "Features" result section.
+ *
+ * Features come from filtering Jahia's UI extender registry in-memory
+ * (no network request). Each row navigates to the admin route using Jahia's
+ * router history. ResultCard is used with no excerpt → compact row height.
+ *
+ * Memoized so it only re-renders when featureHits/trimmedQuery/onNavigate
+ * change — content loading states from other drivers don't cause re-renders.
+ */
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { Button, DataTable, Typography } from "@jahia/moonstone";
 import type { Row } from "@tanstack/react-table";

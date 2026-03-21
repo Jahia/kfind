@@ -1,3 +1,19 @@
+/**
+ * Generic result-row component used by every search table.
+ *
+ * Renders two or three lines depending on whether an excerpt is provided:
+ * - Line 1: title (truncated at 80 chars)
+ * - Line 2: type badge (Chip) + path
+ * - Line 3 (optional): HTML excerpt with highlighted terms
+ *
+ * When no excerpt is present the row uses a compact height (56px vs 96px).
+ *
+ * Keyboard:
+ * - Enter / click → onAction (navigate to the node)
+ * - E → onSecondaryAction (open content editor, if available)
+ * - ArrowDown / ArrowUp → move focus between result rows
+ * - ArrowUp on first row → return focus to the search input
+ */
 import React from "react";
 import {
   Button,

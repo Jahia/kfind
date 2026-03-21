@@ -4,7 +4,7 @@ import {
   buildJcrSql2,
 } from "./queries/pagesQuery.ts";
 import type { ContentSearchDriver } from "../shared/searchTypes.ts";
-import { useJcrSearchDriver } from "../shared/useJcrSearchDriver.ts";
+import { useJcrSearchDriver } from "./useJcrSearchDriver.ts";
 
 /** Searches for jnt:page nodes using JCR (fallback when augmented search is unavailable). */
 export const useJcrSearch = (): ContentSearchDriver =>

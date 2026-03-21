@@ -1,3 +1,13 @@
+/**
+ * Root modal component for the kFind search dialog.
+ *
+ * - Opens/closes via Cmd+K / Ctrl+K / Escape or the `kFind:open-search` custom event.
+ * - Wraps the search panel in an ApolloProvider using jcontent's captured client.
+ * - Footer displays keyboard hints and build timestamp.
+ *
+ * This component mounts once at app startup (see routes.tsx) and persists
+ * for the lifetime of the page.
+ */
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApolloProvider } from "@apollo/client";
@@ -15,6 +25,9 @@ export const KFindModal = () => {
     onApolloClientReady(() => setApolloClientState(getApolloClient()));
   }, []);
 
+  // ── Keyboard shortcut & custom event listeners ──
+  // Registered on both the iframe document and the parent document so the
+  // shortcut works regardless of which frame has focus.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {

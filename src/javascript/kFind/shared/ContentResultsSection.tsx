@@ -1,3 +1,17 @@
+/**
+ * Reusable section component for one search-result table.
+ *
+ * Renders a titled `<DataTable>` with:
+ * - A loading spinner when results are pending and no hits are loaded yet.
+ * - "Loading more…" caption while paginating.
+ * - A "Show more" button when more results are available (locally or server-side).
+ * - Auto-hides entirely when there are no results and nothing is loading,
+ *   so the global "no results" in KFindPanel takes over.
+ *
+ * Client-side pagination (`displayedCount`) slices the `hits` array;
+ * when the user exhausts the local slice, `onLoadMore` triggers the next
+ * server-side page fetch in the orchestration layer.
+ */
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Button,

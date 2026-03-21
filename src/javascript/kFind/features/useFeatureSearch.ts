@@ -1,3 +1,16 @@
+/**
+ * Synchronous hook that searches Jahia's UI extender registry.
+ *
+ * Scans all `adminRoute` and `jExperienceMenuEntry` items in the global
+ * `window.jahia.uiExtender.registry` and returns matches against the
+ * search query.
+ *
+ * Route resolution logic:
+ * - jExperience entries → /jexperience/{site}/{path}
+ * - jcontent targets → /jcontent/{site}/{lang}/apps/{key}
+ * - Server-level targets → /administration/{key}
+ * - Site-level targets → /administration/{site}/{key}
+ */
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { FeatureHit } from "../shared/searchTypes.ts";

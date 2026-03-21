@@ -4,7 +4,7 @@ import {
   buildJcrMainResourcesSql2,
 } from "./queries/mainResourcesQuery.ts";
 import type { ContentSearchDriver } from "../shared/searchTypes.ts";
-import { useJcrSearchDriver } from "../shared/useJcrSearchDriver.ts";
+import { useJcrSearchDriver } from "./useJcrSearchDriver.ts";
 
 /**
  * Searches for jmix:mainResource nodes using JCR.

@@ -4,7 +4,7 @@ import {
   buildJcrMediaSql2,
 } from "./queries/mediaQuery.ts";
 import type { ContentSearchDriver } from "../shared/searchTypes.ts";
-import { useJcrSearchDriver } from "../shared/useJcrSearchDriver.ts";
+import { useJcrSearchDriver } from "./useJcrSearchDriver.ts";
 
 /** Searches for jnt:file nodes (media) using JCR. */
 export const useJcrMediaSearch = (): ContentSearchDriver =>

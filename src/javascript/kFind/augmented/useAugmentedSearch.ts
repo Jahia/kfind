@@ -1,3 +1,14 @@
+/**
+ * Hook for searching via Jahia's augmented-search GraphQL endpoint.
+ *
+ * Augmented search provides:
+ * - Full-text indexing (Elasticsearch under the hood)
+ * - Server-side pagination with totalHits count
+ * - Highlighted excerpts in results
+ *
+ * This driver is only used when the site has the
+ * `jmix:augmentedSearchIndexableSite` mixin (checked by useIsAugmentedAvailable).
+ */
 import { useLazyQuery } from "@apollo/client";
 import { useRef, useState } from "react";
 import { SEARCH_QUERY } from "./augmentedSearchQuery.ts";

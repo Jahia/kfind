@@ -23,13 +23,13 @@ import {
   buildNodesByCriteriaVariables,
   jcrNodeToSearchHit,
   type JcrNode,
-} from "../jcr/queries/pagesQuery.ts";
-import type { SearchHit, ContentSearchDriver } from "./searchTypes.ts";
+} from "./queries/pagesQuery.ts";
+import type { SearchHit, ContentSearchDriver } from "../shared/searchTypes.ts";
 import {
   getSiteKey,
   getSearchLanguage,
   getJcrQueryType,
-} from "./searchUtils.ts";
+} from "../shared/searchUtils.ts";
 
 const PAGE_SIZE = 10;
 
