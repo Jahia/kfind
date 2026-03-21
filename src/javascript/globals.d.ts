@@ -6,6 +6,8 @@ declare interface Window {
     siteKey?: string;
     /** Populated server-side by reading org.jahia.pm.modules.kfind.cfg */
     kfind?: {
+      /** Server-rendered build/request timestamp from kfind.jsp. */
+      buildTime?: string;
       typeOfJCRGraphQL?: "nodesByQuery" | "nodesByCriteria";
       /** Minimum characters before a content search query is fired. Default: 3. */
       minSearchChars?: number;
@@ -58,7 +60,7 @@ declare interface Window {
   };
 }
 
-declare const __BUILD_TIME__: string;
+// __BUILD_TIME__ is no longer a compile-time define; build time is served via contextJsParameters.kfind.buildTime from the JSP
 
 declare module "*.module.css" {
   const classes: { readonly [key: string]: string };

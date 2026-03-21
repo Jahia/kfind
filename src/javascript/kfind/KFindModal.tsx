@@ -99,7 +99,7 @@ export const KFindModal = () => {
                 )}
               </Typography>
               <Typography variant="caption" style={{ opacity: 0.4 }}>
-                {new Date(__BUILD_TIME__).toLocaleString()}
+                {window.contextJsParameters.kfind?.buildTime ?? ""}
               </Typography>
             </div>
           </ModalFooter>
