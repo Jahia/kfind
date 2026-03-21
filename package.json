@@ -1,5 +1,6 @@
 {
-  "name": "kfind",
+  "name": "kfinder",
+  "comment-for-name": "do not use kfind otherwise it blocks the rendering of the ui",
   "private": true,
   "type": "module",
   "scripts": {
