@@ -1,0 +1,57 @@
+# Triggered when a GitHub Release is published (including pre-releases).
+# Builds the module and attaches the JAR to the release as a downloadable asset.
+#
+# To create a release:
+#   1. Bump the version in pom.xml (remove -SNAPSHOT for a GA release).
+#   2. git tag v<version> && git push origin v<version>
+#   3. Create a GitHub Release from that tag — this workflow fires automatically.
+name: On Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write # needed to upload release assets
+
+jobs:
+  build-and-attach:
+    name: Build & attach JAR to release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: "maven"
+
+      - name: Set up Node LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      - name: Enable corepack (Yarn 4)
+        run: corepack enable
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
+
+      - name: Build (mvn clean install)
+        run: mvn --batch-mode clean install -s .github/maven-settings.xml
+
+      - name: TypeScript type-check
+        run: npx tsc --noEmit
+
+      # Upload the OSGi JAR as a release asset so it can be downloaded directly
+      # from the GitHub Releases page and deployed to Jahia.
+      - name: Attach JAR to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/*.jar
