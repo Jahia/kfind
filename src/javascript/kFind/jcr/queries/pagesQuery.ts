@@ -2,16 +2,25 @@ import { gql } from "@apollo/client";
 import type { SearchHit } from "../../shared/searchTypes.ts";
 
 export const JCR_SEARCH_QUERY = gql`
-  query JCRSearch($query: String!, $limit: Int!, $offset: Int!) {
+  query JCRSearch(
+    $query: String!
+    $limit: Int!
+    $offset: Int!
+    $language: String!
+  ) {
     jcr(workspace: EDIT) {
-      nodesByQuery(query: $query, limit: $limit, offset: $offset) {
+      nodesByQuery(
+        query: $query
+        limit: $limit
+        offset: $offset
+        language: $language
+      ) {
         edges {
           node {
-            displayName
+            displayName(language: $language)
             name
             path
             uuid
-            workspace
             primaryNodeType {
               name
             }
@@ -43,11 +52,10 @@ export const JCR_NODES_BY_CRITERIA_QUERY = gql`
         }
       ) {
         nodes {
-          displayName
+          displayName(language: $language)
           name
           path
           uuid
-          workspace
           primaryNodeType {
             name
           }

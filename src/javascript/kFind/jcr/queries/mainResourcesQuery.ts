@@ -22,11 +22,10 @@ export const JCR_MAIN_RESOURCES_BY_CRITERIA_QUERY = gql`
         }
       ) {
         nodes {
-          displayName
+          displayName(language: $language)
           name
           path
           uuid
-          workspace
           primaryNodeType {
             name
           }

@@ -115,6 +115,7 @@ export const useJcrSearchDriver = ({
             query: buildSql2(query, sitePath),
             limit: PAGE_SIZE,
             offset: page * PAGE_SIZE,
+            language: getSearchLanguage(),
           },
         });
       }

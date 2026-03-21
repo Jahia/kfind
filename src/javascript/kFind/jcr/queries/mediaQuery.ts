@@ -7,7 +7,7 @@ export const JCR_MEDIA_SEARCH_QUERY = gql`
       nodesByQuery(query: $query, limit: $limit, offset: $offset) {
         edges {
           node {
-            displayName
+            displayName(language: $language)
             name
             path
             uuid
@@ -43,11 +43,10 @@ export const JCR_MEDIA_BY_CRITERIA_QUERY = gql`
         }
       ) {
         nodes {
-          displayName
+          displayName(language: $language)
           name
           path
           uuid
-          workspace
           primaryNodeType {
             name
           }
