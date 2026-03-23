@@ -18,7 +18,12 @@ export const JCR_MAIN_RESOURCES_BY_CRITERIA_QUERY = gql`
           paths: [$sitePath]
           pathType: ANCESTOR
           language: $language
-          nodeConstraint: { any: [{ contains: $searchTerm }] }
+          nodeConstraint: {
+            any: [
+              { contains: $searchTerm }
+              { contains: $searchTerm, property: "j:tagList" }
+            ]
+          }
         }
       ) {
         nodes {
@@ -26,6 +31,7 @@ export const JCR_MAIN_RESOURCES_BY_CRITERIA_QUERY = gql`
           name
           path
           uuid
+          workspace
           primaryNodeType {
             name
           }

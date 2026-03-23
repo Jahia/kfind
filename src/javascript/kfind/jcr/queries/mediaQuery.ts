@@ -2,9 +2,19 @@ import { gql } from "@apollo/client";
 import { escapeJcrSql2 } from "./pagesQuery.ts";
 
 export const JCR_MEDIA_SEARCH_QUERY = gql`
-  query JCRMediaSearch($query: String!, $limit: Int!, $offset: Int!, $language: String!) {
+  query JCRMediaSearch(
+    $query: String!
+    $limit: Int!
+    $offset: Int!
+    $language: String!
+  ) {
     jcr(workspace: EDIT) {
-      nodesByQuery(query: $query, limit: $limit, offset: $offset, language: $language) {
+      nodesByQuery(
+        query: $query
+        limit: $limit
+        offset: $offset
+        language: $language
+      ) {
         edges {
           node {
             displayName(language: $language)
@@ -39,7 +49,12 @@ export const JCR_MEDIA_BY_CRITERIA_QUERY = gql`
           paths: [$sitePath]
           pathType: ANCESTOR
           language: $language
-          nodeConstraint: { any: [{ contains: $searchTerm }] }
+          nodeConstraint: {
+            any: [
+              { contains: $searchTerm }
+              { contains: $searchTerm, property: "j:tagList" }
+            ]
+          }
         }
       ) {
         nodes {
@@ -47,6 +62,7 @@ export const JCR_MEDIA_BY_CRITERIA_QUERY = gql`
           name
           path
           uuid
+          workspace
           primaryNodeType {
             name
           }
