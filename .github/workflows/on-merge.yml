@@ -70,6 +70,10 @@ jobs:
         password: ${{ secrets.GH_PACKAGES_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
       - uses: jahia/jahia-modules-action/publish@v2
         with:
           mvn_settings_filepath: .github/maven.settings.xml
