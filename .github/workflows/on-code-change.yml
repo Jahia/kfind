@@ -42,6 +42,7 @@ jobs:
           nexus_username: ${{ secrets.NEXUS_USERNAME }}
           nexus_password: ${{ secrets.NEXUS_PASSWORD }}
           tests_module_type: disabled
+          node_version: 24
 
   sonar-analysis:
     name: Sonar Analysis
