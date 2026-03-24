@@ -16,10 +16,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button, DataTable, Typography } from "@jahia/moonstone";
 import type { Row } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
-import { ResultCard } from "./ResultCard.tsx";
-import type { SearchHit } from "./searchTypes.ts";
-import { locateInJContent } from "./navigationUtils.ts";
-import tableLayout from "./resultsTableLayout.module.css";
+import { ResultCard } from "../ResultCard/ResultCard.tsx";
+import type { SearchHit } from "../shared/searchTypes.ts";
+import { locateInJContent } from "../shared/navigationUtils.ts";
+import tableLayout from "../shared/resultsTableLayout.module.css";
 import s from "./ContentResultsSection.module.css";
 
 const editNode = (path: string) => window.parent.CE_API?.edit({ path });

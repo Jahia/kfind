@@ -12,5 +12,5 @@
     "allowImportingTsExtensions": true,
     "noUncheckedSideEffectImports": true
   },
-  "exclude": ["vite.config.ts"]
+  "exclude": ["vite.config.ts", "tests"]
 }

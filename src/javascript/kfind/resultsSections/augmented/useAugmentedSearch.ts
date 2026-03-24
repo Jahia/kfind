@@ -12,8 +12,11 @@
 import { useLazyQuery } from "@apollo/client";
 import { useRef, useState } from "react";
 import { SEARCH_QUERY } from "./augmentedSearchQuery.ts";
-import type { SearchHit, ContentSearchDriver } from "../shared/searchTypes.ts";
-import { getSiteKey, getSearchLanguage } from "../shared/navigationUtils.ts";
+import type {
+  SearchHit,
+  ContentSearchDriver,
+} from "../../shared/searchTypes.ts";
+import { getSiteKey, getSearchLanguage } from "../../shared/navigationUtils.ts";
 
 const PAGE_SIZE = 10;
 

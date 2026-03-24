@@ -15,8 +15,11 @@
  */
 import { useLazyQuery, type DocumentNode } from "@apollo/client";
 import { useCallback, useRef, useState } from "react";
-import type { SearchHit, ContentSearchDriver } from "../shared/searchTypes.ts";
-import { getSiteKey, getSearchLanguage } from "../shared/navigationUtils.ts";
+import type {
+  SearchHit,
+  ContentSearchDriver,
+} from "../../shared/searchTypes.ts";
+import { getSiteKey, getSearchLanguage } from "../../shared/navigationUtils.ts";
 
 const PAGE_SIZE = 10;
 

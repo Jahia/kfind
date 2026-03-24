@@ -12,7 +12,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApolloProvider } from "@apollo/client";
 import { Modal, ModalFooter, Typography } from "@jahia/moonstone";
-import { KFindPanel } from "./KFindPanel.tsx";
+import { KFindPanel } from "./KFindPanel/KFindPanel.tsx";
 import { getApolloClient, onApolloClientReady } from "./apolloClientBridge.ts";
 
 export const KFindModal = () => {
@@ -98,9 +98,12 @@ export const KFindModal = () => {
                   "Press Ctrl+K or ⌘K to open · Esc to close · ↑↓ navigate · Enter to go · E to edit",
                 )}
               </Typography>
-              <Typography variant="caption" style={{ opacity: 0.4 }}>
-                {window.contextJsParameters.kfind?.buildTime ?? ""}
-              </Typography>
+              {/* Build time shown only in dev builds; __DEV_BUILD__ is replaced at compile time by Vite */}
+              {__DEV_BUILD__ && (
+                <Typography variant="caption" style={{ opacity: 0.4 }}>
+                  {window.contextJsParameters.kfind?.buildTime ?? ""}
+                </Typography>
+              )}
             </div>
           </ModalFooter>
         </>

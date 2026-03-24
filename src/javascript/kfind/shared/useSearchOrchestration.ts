@@ -17,13 +17,13 @@
  */
 import { useEffect, useRef } from "react";
 import { useIsAugmentedAvailable } from "./useIsAugmentedAvailable.ts";
-import { useAugmentedSearch } from "../augmented/useAugmentedSearch.ts";
-import { useJcrSearchDriver } from "../jcr/useJcrSearchDriver.ts";
-import { JCR_NODES_BY_CRITERIA_QUERY } from "../jcr/queries/pagesQuery.ts";
-import { JCR_MEDIA_BY_CRITERIA_QUERY } from "../jcr/queries/mediaQuery.ts";
-import { JCR_MAIN_RESOURCES_BY_CRITERIA_QUERY } from "../jcr/queries/mainResourcesQuery.ts";
-import { useFeatureSearch } from "../features/useFeatureSearch.ts";
-import { useUrlReverseLookup } from "../urlReverseLookup/useUrlReverseLookup.ts";
+import { useAugmentedSearch } from "../resultsSections/augmented/useAugmentedSearch.ts";
+import { useJcrSearchDriver } from "../resultsSections/jcr/useJcrSearchDriver.ts";
+import { JCR_NODES_BY_CRITERIA_QUERY } from "../resultsSections/jcr/queries/pagesQuery.ts";
+import { JCR_MEDIA_BY_CRITERIA_QUERY } from "../resultsSections/jcr/queries/mediaQuery.ts";
+import { JCR_MAIN_RESOURCES_BY_CRITERIA_QUERY } from "../resultsSections/jcr/queries/mainResourcesQuery.ts";
+import { useFeatureSearch } from "../resultsSections/features/useFeatureSearch.ts";
+import { useUrlReverseLookup } from "../resultsSections/urlReverseLookup/useUrlReverseLookup.ts";
 import type { ContentSearchDriver } from "./searchTypes.ts";
 import type { FeatureHit, SearchHit } from "./searchTypes.ts";
 import {

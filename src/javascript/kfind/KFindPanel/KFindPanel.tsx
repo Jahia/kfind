@@ -15,11 +15,11 @@
 import React, { useCallback, useRef, useState } from "react";
 import { Close, EmptyData, Search } from "@jahia/moonstone";
 import { useTranslation } from "react-i18next";
-import { KFindHeader } from "./KFindHeader.tsx";
-import { useSearchOrchestration } from "./shared/useSearchOrchestration.ts";
-import { FeatureResults } from "./features/FeatureResults.tsx";
-import { UrlReverseLookupResults } from "./urlReverseLookup/UrlReverseLookupResults.tsx";
-import { ContentResultsSection } from "./shared/ContentResultsSection.tsx";
+import { KFindHeader } from "../KFindHeader/KFindHeader.tsx";
+import { useSearchOrchestration } from "../shared/useSearchOrchestration.ts";
+import { FeatureResultsSection } from "../resultsSections/features/FeatureResultsSection.tsx";
+import { UrlReverseLookupResultsSection } from "../resultsSections/urlReverseLookup/UrlReverseLookupResultsSection.tsx";
+import { ContentResultsSection } from "../ContentResultsSection/ContentResultsSection.tsx";
 import {
   getMinSearchChars,
   getDefaultDisplayedResults,
@@ -31,8 +31,8 @@ import {
   isJcrMainResourcesEnabled,
   getJcrMainResourcesMaxResults,
   isUrlReverseLookupEnabled,
-} from "./shared/configUtils.ts";
-import styles from "./shared/layout.module.css";
+} from "../shared/configUtils.ts";
+import styles from "../shared/layout.module.css";
 import s from "./KFindPanel.module.css";
 
 type KFindPanelProps = {
@@ -114,7 +114,7 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
 
         {/* ── 0. Direct URL Match (always first, if enabled) ── */}
         {isUrlReverseLookupEnabled() && trimmedQuery.length >= minChars && (
-          <UrlReverseLookupResults
+          <UrlReverseLookupResultsSection
             hit={urlReverseLookupHit}
             loading={urlReverseLookupLoading}
             scrollContainerRef={scrollContainerRef}
@@ -125,7 +125,7 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
 
         {/* ── 1. UI Features (always, if enabled) ── */}
         {isUiFeaturesEnabled() && (
-          <FeatureResults
+          <FeatureResultsSection
             trimmedQuery={trimmedQuery}
             featureHits={featureHits}
             onNavigate={onNavigate}

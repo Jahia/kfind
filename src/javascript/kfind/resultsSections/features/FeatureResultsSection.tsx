@@ -1,29 +1,29 @@
 /**
  * Renders the "Features" result section.
  *
- * Features come from filtering Jahia's UI extender registry in-memory
- * (no network request). Each row navigates to the admin route using Jahia's
- * router history. ResultCard is used with no excerpt → compact row height.
+ * Not merged with ContentResultsSection despite the similar layout because:
+ * - Different data shape (FeatureHit vs SearchHit, different primary keys)
+ * - No loading/server-pagination (features are filtered in-memory from the registry)
+ * - Custom navigation logic (router history / pushState, not locateInJContent)
  *
- * Memoized so it only re-renders when featureHits/trimmedQuery/onNavigate
- * change — content loading states from other drivers don't cause re-renders.
+ * Memoized so content-driver loading states don't trigger re-renders.
  */
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { Button, DataTable, Typography } from "@jahia/moonstone";
 import type { Row } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
-import { ResultCard } from "../shared/ResultCard.tsx";
-import type { FeatureHit } from "../shared/searchTypes.ts";
+import { ResultCard } from "../../ResultCard/ResultCard.tsx";
+import type { FeatureHit } from "../../shared/searchTypes.ts";
 import {
   getUiFeaturesMaxResults,
   getMinSearchChars,
-} from "../shared/configUtils.ts";
-import tableLayout from "../shared/resultsTableLayout.module.css";
-import s from "../shared/ContentResultsSection.module.css";
+} from "../../shared/configUtils.ts";
+import tableLayout from "../../shared/resultsTableLayout.module.css";
+import s from "../../ContentResultsSection/ContentResultsSection.module.css";
 
 const featureColumns = [{ key: "label" as const, label: "" }];
 
-type FeatureResultsProps = {
+type FeatureResultsSectionProps = {
   trimmedQuery: string;
   featureHits: FeatureHit[];
   onNavigate?: () => void;
@@ -32,14 +32,14 @@ type FeatureResultsProps = {
 };
 
 // Memoized so it only re-renders when featureHits/trimmedQuery/onNavigate change — not on content loading state.
-export const FeatureResults = memo(
+export const FeatureResultsSection = memo(
   ({
     trimmedQuery,
     featureHits,
     onNavigate,
     scrollContainerRef,
     inputWrapperRef,
-  }: FeatureResultsProps) => {
+  }: FeatureResultsSectionProps) => {
     const { t } = useTranslation();
     const [displayedCount, setDisplayedCount] = useState(
       getUiFeaturesMaxResults,

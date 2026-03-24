@@ -9,17 +9,17 @@ import React, { useCallback } from "react";
 import { DataTable, Typography } from "@jahia/moonstone";
 import type { Row } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
-import { ResultCard } from "../shared/ResultCard.tsx";
-import type { SearchHit } from "../shared/searchTypes.ts";
-import { locateInJContent } from "../shared/navigationUtils.ts";
-import tableLayout from "../shared/resultsTableLayout.module.css";
-import s from "../shared/ContentResultsSection.module.css";
+import { ResultCard } from "../../ResultCard/ResultCard.tsx";
+import type { SearchHit } from "../../shared/searchTypes.ts";
+import { locateInJContent } from "../../shared/navigationUtils.ts";
+import tableLayout from "../../shared/resultsTableLayout.module.css";
+import s from "../../ContentResultsSection/ContentResultsSection.module.css";
 
 const editNode = (path: string) => window.parent.CE_API?.edit({ path });
 
 const columns = [{ key: "displayableName" as const, label: "" }];
 
-type UrlReverseLookupResultsProps = {
+type UrlReverseLookupResultsSectionProps = {
   hit: SearchHit | null;
   loading: boolean;
   scrollContainerRef: React.RefObject<HTMLDivElement>;
@@ -27,13 +27,13 @@ type UrlReverseLookupResultsProps = {
   onNavigate?: () => void;
 };
 
-export const UrlReverseLookupResults = ({
+export const UrlReverseLookupResultsSection = ({
   hit,
   loading,
   scrollContainerRef,
   inputWrapperRef,
   onNavigate,
-}: UrlReverseLookupResultsProps) => {
+}: UrlReverseLookupResultsSectionProps) => {
   const { t } = useTranslation();
 
   const renderRow = useCallback(

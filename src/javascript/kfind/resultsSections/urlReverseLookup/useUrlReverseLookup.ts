@@ -1,8 +1,8 @@
 import { useLazyQuery } from "@apollo/client";
 import { useCallback, useState } from "react";
 import { URL_REVERSE_LOOKUP_QUERY } from "./urlReverseLookupQuery.ts";
-import type { SearchHit } from "../shared/searchTypes.ts";
-import { getSiteKey, getSearchLanguage } from "../shared/navigationUtils.ts";
+import type { SearchHit } from "../../shared/searchTypes.ts";
+import { getSiteKey, getSearchLanguage } from "../../shared/navigationUtils.ts";
 
 type UrlReverseLookupResult = {
   hit: SearchHit | null;
