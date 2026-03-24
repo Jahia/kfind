@@ -1,45 +1,71 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODE="${1:-}"
+CMD="${2:-deploy}"
 
-elapsed() {
-  local secs=$(( $(date +%s) - $1 ))
-  printf "%dm%02ds" $(( secs / 60 )) $(( secs % 60 ))
-}
-
-if [[ -f "$SCRIPT_DIR/.env" ]]; then
-  source "$SCRIPT_DIR/.env"
-else
-  echo "✗ .env file not found. Create it with JAHIA_URL, JAHIA_USER, JAHIA_PASS." >&2
+if [[ "$MODE" != "dev" && "$MODE" != "prod" ]]; then
+  echo "Usage: $0 <dev|prod> [deploy|test]" >&2
+  exit 1
+fi
+if [[ "$CMD" != "deploy" && "$CMD" != "test" ]]; then
+  echo "Usage: $0 <dev|prod> [deploy|test]" >&2
   exit 1
 fi
 
-echo "==> Building module (dev)..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
-t_build=$(date +%s)
-mvn clean install -P dev -q
-echo "==> Build done in $(elapsed $t_build)"
+
+source "$SCRIPT_DIR/.env" 2>/dev/null || { echo "✗ .env file not found. Create it with JAHIA_URL, JAHIA_USER, JAHIA_PASS." >&2; exit 1; }
+
+# Build
+MVN_ARGS=(clean install -q)
+[[ "$MODE" == "dev" ]] && MVN_ARGS+=(-P dev)
+
+echo "==> Building module ($MODE)..."
+t0=$(date +%s)
+mvn "${MVN_ARGS[@]}"
 
 JAR="$(ls "$SCRIPT_DIR"/target/kfind-*.jar 2>/dev/null | grep -v sources | head -1)"
 [[ -z "$JAR" ]] && { echo "✗ No JAR found in target/ after build." >&2; exit 1; }
-echo "==> JAR: $(basename "$JAR") ($(du -h "$JAR" | cut -f1))"
+echo "==> Build done ($(du -h "$JAR" | cut -f1))"
 
-SCRIPT_JSON="[{\"installBundle\":\"$(basename "$JAR")\", \"autoStart\": true, \"forceUpdate\": true, \"uninstallPreviousVersion\": true}]"
-
-echo "==> Sending provisioning request to $JAHIA_URL/modules/api/provisioning ..."
-t_deploy=$(date +%s)
+# Deploy
+echo "==> Deploying to $JAHIA_URL ..."
 HTTP_RESPONSE=$(curl --silent --show-error --max-time 120 --write-out "\nHTTP_STATUS:%{http_code}" \
   -u "$JAHIA_USER:$JAHIA_PASS" -X POST "$JAHIA_URL/modules/api/provisioning" \
-  --form "script=$SCRIPT_JSON" --form "file=@$JAR")
+  --form "script=[{\"installBundle\":\"$(basename "$JAR")\",\"autoStart\":true,\"forceUpdate\":true,\"uninstallPreviousVersion\":true}]" \
+  --form "file=@$JAR")
 
 HTTP_STATUS=$(echo "$HTTP_RESPONSE" | grep "^HTTP_STATUS:" | cut -d: -f2)
-echo "==> Deploy done in $(elapsed $t_deploy) (HTTP $HTTP_STATUS)"
+elapsed=$(( $(date +%s) - t0 ))
 
 if [[ "$HTTP_STATUS" -ge 200 && "$HTTP_STATUS" -lt 300 ]]; then
-  echo "✓ Deployment succeeded — total: $(elapsed $t_build)"
+  printf "✓ Deployed (%s) in %dm%02ds\n" "$MODE" $(( elapsed / 60 )) $(( elapsed % 60 ))
 else
   echo "$HTTP_RESPONSE" | sed '/^HTTP_STATUS:/d'
   echo "✗ Deployment failed (HTTP $HTTP_STATUS)" >&2
   exit 1
+fi
+
+# Run tests if requested
+if [[ "$CMD" == "test" ]]; then
+  TESTS_DIR="$SCRIPT_DIR/tests"
+  [[ ! -d "$TESTS_DIR" ]] && { echo "✗ tests/ directory not found." >&2; exit 1; }
+
+  echo "==> Installing test dependencies..."
+  (cd "$TESTS_DIR" && yarn install --silent)
+
+  # Source the tests .env (fall back to .env.example), but let the root .env
+  # variables already loaded take precedence for JAHIA_URL / credentials.
+  TESTS_ENV_FILE="$TESTS_DIR/.env"
+  [[ ! -f "$TESTS_ENV_FILE" ]] && TESTS_ENV_FILE="$TESTS_DIR/.env.example"
+
+  # Export Cypress env vars derived from the already-loaded root .env
+  export CYPRESS_BASE_URL="${JAHIA_URL:-http://localhost:8080}"
+  export CYPRESS_JAHIA_URL="${JAHIA_URL:-http://localhost:8080}"
+  export CYPRESS_SUPER_USER_PASSWORD="${JAHIA_PASS:-root1234}"
+
+  echo "==> Running Cypress tests against $CYPRESS_BASE_URL ..."
+  (cd "$TESTS_DIR" && yarn e2e:ci)
 fi
