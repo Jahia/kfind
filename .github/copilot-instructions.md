@@ -42,16 +42,18 @@ src/javascript/
     KFindPanel/                → Search input + section rendering
     routes.tsx                 → Jahia registry entry, mounts modal/header integration
     shared/                    → Navigation/config/orchestration helpers
-  kfind-drivers/
-    registerAll.ts             → Registers all search drivers
+  kfind-providers/
+    registerAll.ts             → Registers all search providers
     augmented/                 → Augmented search provider and queries
-    jcr/                       → JCR fallback drivers (pages/media/main resources)
-    features/                  → UI features search driver
-    urlReverseLookup/          → URL reverse lookup driver
+    jcr/                       → JCR fallback providers (pages/media/main resources)
+    features/                  → UI features search provider
+    urlReverseLookup/          → URL reverse lookup provider
 ```
 
-- `useSearchOrchestration` is registry-driven and runs all enabled `kfindDriver` providers.
-- Driver availability uses `checkAvailability(client)` and is evaluated with `window.jahia.apolloClient`.
+- `useSearchOrchestration` is registry-driven and runs all enabled `kfindProvider` providers.
+- Provider availability uses `checkAvailability(client)` and is evaluated with `window.jahia.apolloClient`.
+- Provider extensibility is registry-based: any module can register a provider with `registry.add("kfindProvider", "<key>", provider)`.
+- Third-party Jahia modules should add registrations in their own init callback; they do not need to edit `kfind-providers/registerAll.ts`.
 - Runtime config comes from `window.contextJsParameters.kfind` (populated from OSGi `.cfg`/JSP).
 - Navigation to jContent is handled via shared helpers in `kfind/shared/navigationUtils.ts`.
 
@@ -60,11 +62,11 @@ src/javascript/
 - **Imports**: Always include `.ts`/`.tsx` extensions (e.g., `import { foo } from "./bar.ts"`)
 - **CSS**: Use CSS Modules — import as `import s from "./Component.module.css"`
 - **Components**: `.tsx` for React components, `.ts` for hooks/utilities/queries
-- **GraphQL**: Keep queries in dedicated files (`*Query.ts`/`*.ts`); driver providers typically use `client.query(...)`
+- **GraphQL**: Keep queries in dedicated files (`*Query.ts`/`*.ts`); provider implementations typically use `client.query(...)`
 - **i18n**: Nested keys (e.g., `search.placeholder`), always provide fallback string in `t()` calls, keep en/fr/de in sync
 - **Types**: Prefer inline types + `searchTypes.ts` for shared types; augment `Window` in `globals.d.ts`
 - **No `index.ts` barrel files** — import from specific files directly
-- **Hooks**: Keep orchestration in shared hooks (for example `useSearchOrchestration`) and keep drivers framework-agnostic
+- **Hooks**: Keep orchestration in shared hooks (for example `useSearchOrchestration`) and keep providers framework-agnostic
 
 ## Code Quality
 

@@ -1,9 +1,9 @@
 /**
- * Internal GraphQL response shape types used by driver implementations.
+ * Internal GraphQL response shape types used by provider implementations.
  */
 
 /** The two available JCR workspaces, as returned by `JCRNode.workspace`. */
-export type Workspace = 'EDIT' | 'LIVE';
+export type Workspace = "EDIT" | "LIVE";
 
 /**
  * GraphQL `JCRNodeType` as returned by node-type sub-selections in kfind queries.

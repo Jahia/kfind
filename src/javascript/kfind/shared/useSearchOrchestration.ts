@@ -1,42 +1,42 @@
 /**
  * Central search orchestration hook — registry-driven.
  *
- * Reads all registered `kfindDriver` entries from the Jahia UI registry
+ * Reads all registered `kfindProvider` entries from the Jahia UI registry
  * and manages their lifecycle generically. Has no knowledge of specific
- * drivers (augmented, JCR, features, etc.).
+ * providers (augmented, JCR, features, etc.).
  *
  * Responsibilities:
- * - Reads `getRegisteredDrivers()` on mount, filters by `isEnabled()`,
+ * - Reads `getRegisteredProviders()` on mount, filters by `isEnabled()`,
  *   creates `KFindResultsProvider` instances via `createSearchProvider(client)`.
- * - Runs `checkAvailability()` for drivers that declare it.
+ * - Runs `checkAvailability()` for providers that declare it.
  * - Debounces user keystrokes with a single global timer.
- * - Fires `search(query, 0)` on each active driver after debounce.
- * - Manages per-driver state (hits, loading, hasMore, page) via `useReducer`.
- * - Exposes pagination helpers (`loadNextPage`) per driver.
+ * - Fires `search(query, 0)` on each active provider after debounce.
+ * - Manages per-provider state (hits, loading, hasMore, page) via `useReducer`.
+ * - Exposes pagination helpers (`loadNextPage`) per provider.
  *
  * @param searchValue — The raw (untrimmed) value from the search input.
  */
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import {
-  getRegisteredDrivers,
-  type KFindDriver,
+  getRegisteredProviders,
+  type KFindProvider,
   type KFindResultsProvider,
   type SearchHit,
-} from "../../kfind-drivers/types.ts";
+} from "../../kfind-providers/types.ts";
 import { getMinSearchChars, getDebounceDelay } from "./configUtils.ts";
 
-// ── Per-driver state ──
-// Each driver gets its own independent state slice, keyed by the driver's
+// ── Per-provider state ──
+// Each provider gets its own independent state slice, keyed by the provider's
 // registry key (e.g. "kfind-jcr-media"). This allows each section to load,
 // paginate, and error independently.
-type DriverState = {
+type ProviderState = {
   allHits: SearchHit[];
   loading: boolean;
   hasMore: boolean;
   page: number;
 };
 
-const INITIAL_DRIVER_STATE: DriverState = {
+const INITIAL_PROVIDER_STATE: ProviderState = {
   allHits: [],
   loading: false,
   hasMore: false,
@@ -45,12 +45,12 @@ const INITIAL_DRIVER_STATE: DriverState = {
 
 // ── Reducer ──
 // All state mutations flow through this reducer so that batched dispatches
-// (e.g. multiple drivers completing around the same time) are handled atomically.
+// (e.g. multiple providers completing around the same time) are handled atomically.
 type State = {
-  driverStates: Record<string, DriverState>;
+  providerStates: Record<string, ProviderState>;
   currentQuery: string;
   availabilityResolved: boolean;
-  driverAvailability: Record<string, boolean>;
+  providerAvailability: Record<string, boolean>;
 };
 
 type Action =
@@ -73,10 +73,10 @@ function reducer(state: State, action: Action): State {
     case "SEARCH_START":
       return {
         ...state,
-        driverStates: {
-          ...state.driverStates,
+        providerStates: {
+          ...state.providerStates,
           [action.key]: {
-            ...(state.driverStates[action.key] ?? INITIAL_DRIVER_STATE),
+            ...(state.providerStates[action.key] ?? INITIAL_PROVIDER_STATE),
             loading: true,
           },
         },
@@ -84,13 +84,13 @@ function reducer(state: State, action: Action): State {
     case "SEARCH_SUCCESS": {
       // On page 0: replace all hits (new search).
       // On page N > 0: append to existing hits (pagination).
-      const prev = state.driverStates[action.key] ?? INITIAL_DRIVER_STATE;
+      const prev = state.providerStates[action.key] ?? INITIAL_PROVIDER_STATE;
       const allHits =
         action.page === 0 ? action.hits : [...prev.allHits, ...action.hits];
       return {
         ...state,
-        driverStates: {
-          ...state.driverStates,
+        providerStates: {
+          ...state.providerStates,
           [action.key]: {
             allHits,
             loading: false,
@@ -104,10 +104,10 @@ function reducer(state: State, action: Action): State {
     case "SEARCH_ERROR":
       return {
         ...state,
-        driverStates: {
-          ...state.driverStates,
+        providerStates: {
+          ...state.providerStates,
           [action.key]: {
-            ...(state.driverStates[action.key] ?? INITIAL_DRIVER_STATE),
+            ...(state.providerStates[action.key] ?? INITIAL_PROVIDER_STATE),
             loading: false,
           },
         },
@@ -115,19 +115,19 @@ function reducer(state: State, action: Action): State {
     case "SET_CURRENT_QUERY":
       return { ...state, currentQuery: action.query };
     case "RESET_ALL": {
-      const driverStates: Record<string, DriverState> = {};
+      const providerStates: Record<string, ProviderState> = {};
       for (const key of action.keys) {
-        driverStates[key] = INITIAL_DRIVER_STATE;
+        providerStates[key] = INITIAL_PROVIDER_STATE;
       }
 
-      return { ...state, driverStates, currentQuery: "" };
+      return { ...state, providerStates, currentQuery: "" };
     }
 
     case "SET_AVAILABILITY":
       return {
         ...state,
-        driverAvailability: {
-          ...state.driverAvailability,
+        providerAvailability: {
+          ...state.providerAvailability,
           [action.key]: action.available,
         },
       };
@@ -140,10 +140,10 @@ function reducer(state: State, action: Action): State {
 
 // ── Public types ──
 export type SearchOrchestrationResult = {
-  drivers: {
+  providers: {
     key: string;
-    registration: KFindDriver;
-    state: DriverState;
+    registration: KFindProvider;
+    state: ProviderState;
     loadNextPage: () => void;
   }[];
   currentQuery: string;
@@ -154,23 +154,23 @@ export type SearchOrchestrationResult = {
 export const useSearchOrchestration = (
   searchValue: string,
 ): SearchOrchestrationResult => {
-  // ── 1. Discover and initialize drivers (once on mount) ──
-  // We use a ref (not state) because the driver list is stable for the
-  // component's lifetime — drivers are discovered from the registry once
+  // ── 1. Discover and initialize providers (once on mount) ──
+  // We use a ref (not state) because the provider list is stable for the
+  // component's lifetime — providers are discovered from the registry once
   // and never change. This avoids unnecessary re-renders.
-  const driversRef = useRef<
+  const providersRef = useRef<
     | {
         key: string;
-        registration: KFindDriver;
+        registration: KFindProvider;
         provider: KFindResultsProvider;
       }[]
     | null
   >(null);
 
-  if (driversRef.current === null) {
+  if (providersRef.current === null) {
     const client = window.jahia?.apolloClient ?? null;
-    const all = getRegisteredDrivers().filter((d) => d.isEnabled());
-    driversRef.current = all.map((reg) => ({
+    const all = getRegisteredProviders().filter((d) => d.isEnabled());
+    providersRef.current = all.map((reg) => ({
       key: (reg as unknown as { key: string }).key,
       registration: reg,
       provider: client
@@ -182,25 +182,25 @@ export const useSearchOrchestration = (
     }));
   }
 
-  const drivers = driversRef.current;
-  const driverKeys = useMemo(() => drivers.map((d) => d.key), [drivers]);
+  const providers = providersRef.current;
+  const providerKeys = useMemo(() => providers.map((d) => d.key), [providers]);
 
   // ── 2. State ──
   const initialState: State = useMemo(() => {
-    const driverStates: Record<string, DriverState> = {};
-    for (const key of driverKeys) {
-      driverStates[key] = INITIAL_DRIVER_STATE;
+    const providerStates: Record<string, ProviderState> = {};
+    for (const key of providerKeys) {
+      providerStates[key] = INITIAL_PROVIDER_STATE;
     }
 
-    // Optimistically mark as resolved if no driver has checkAvailability.
-    const needsCheck = drivers.some((d) => d.registration.checkAvailability);
+    // Optimistically mark as resolved if no provider has checkAvailability.
+    const needsCheck = providers.some((d) => d.registration.checkAvailability);
     return {
-      driverStates,
+      providerStates,
       currentQuery: "",
       availabilityResolved: !needsCheck,
-      driverAvailability: {},
+      providerAvailability: {},
     };
-  }, [driverKeys, drivers]);
+  }, [providerKeys, providers]);
 
   const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -210,7 +210,7 @@ export const useSearchOrchestration = (
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── 3. Availability checks ──
-  // Some drivers need an async check (e.g. "is augmented search enabled
+  // Some providers need an async check (e.g. "is augmented search enabled
   // on this site?") before they can be shown. We defer these checks until
   // the user first types enough characters — no wasted network requests
   // if the modal is opened and closed without searching.
@@ -229,7 +229,7 @@ export const useSearchOrchestration = (
       return;
     }
 
-    const checks = drivers
+    const checks = providers
       .filter((d) => d.registration.checkAvailability)
       .map((d) =>
         d.registration.checkAvailability!(client)
@@ -253,7 +253,7 @@ export const useSearchOrchestration = (
         dispatch({ type: "AVAILABILITY_COMPLETE" });
       });
     }
-  }, [drivers]);
+  }, [providers]);
 
   // ── 4. Search execution ──
   const executeSearch = useCallback(
@@ -269,21 +269,21 @@ export const useSearchOrchestration = (
 
       dispatch({ type: "SET_CURRENT_QUERY", query: trimmed });
 
-      for (const d of drivers) {
-        // Skip drivers that failed availability check.
+      for (const d of providers) {
+        // Skip providers that failed availability check.
         if (d.registration.checkAvailability) {
-          const available = stateRef.current.driverAvailability[d.key];
+          const available = stateRef.current.providerAvailability[d.key];
           if (available === false) {
             continue;
           }
 
-          // If availability hasn't been resolved yet for this specific driver, skip.
+          // If availability hasn't been resolved yet for this specific provider, skip.
           if (available === undefined) {
             continue;
           }
         }
 
-        // Skip drivers that can't handle this query.
+        // Skip providers that can't handle this query.
         if (d.registration.canHandle && !d.registration.canHandle(trimmed)) {
           continue;
         }
@@ -305,7 +305,7 @@ export const useSearchOrchestration = (
           });
       }
     },
-    [drivers],
+    [providers],
   );
 
   // Stable ref for triggerSearch so effects don't re-fire.
@@ -318,14 +318,14 @@ export const useSearchOrchestration = (
     [],
   );
 
-  // ── 5. Reset all drivers ──
+  // ── 5. Reset all providers ──
   const resetAll = useCallback(() => {
-    for (const d of drivers) {
+    for (const d of providers) {
       d.provider.reset();
     }
 
-    dispatch({ type: "RESET_ALL", keys: driverKeys });
-  }, [drivers, driverKeys]);
+    dispatch({ type: "RESET_ALL", keys: providerKeys });
+  }, [providers, providerKeys]);
 
   // ── 6. Effect: debounce keystrokes ──
   useEffect(() => {
@@ -356,7 +356,7 @@ export const useSearchOrchestration = (
   // ── 7. Effect: re-fire search when availability resolves ──
   // Availability checks are async — they may resolve AFTER the debounce
   // already fired. When that happens, we re-fire the search so that
-  // newly-available drivers get their results too.
+  // newly-available providers get their results too.
   useEffect(() => {
     if (!state.availabilityResolved) {
       return;
@@ -373,65 +373,66 @@ export const useSearchOrchestration = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.availabilityResolved]);
 
-  // ── 8. Build active drivers for the consumer ──
-  // Filters out drivers that are disabled or failed their availability
-  // check, then wraps each surviving driver with its current state and
+  // ── 8. Build active providers for the consumer ──
+  // Filters out providers that are disabled or failed their availability
+  // check, then wraps each surviving provider with its current state and
   // a `loadNextPage` callback for client-driven pagination.
-  const activeDrivers: SearchOrchestrationResult["drivers"] = useMemo(() => {
-    return drivers
-      .filter((d) => {
-        // Must be enabled (already filtered on mount, but defensive).
-        if (!d.registration.isEnabled()) {
-          return false;
-        }
-
-        // If has availability check, must be resolved and true.
-        if (d.registration.checkAvailability) {
-          const available = state.driverAvailability[d.key];
-          if (available !== true) {
+  const activeProviders: SearchOrchestrationResult["providers"] =
+    useMemo(() => {
+      return providers
+        .filter((d) => {
+          // Must be enabled (already filtered on mount, but defensive).
+          if (!d.registration.isEnabled()) {
             return false;
           }
-        }
 
-        return true;
-      })
-      .map((d) => ({
-        key: d.key,
-        registration: d.registration,
-        state: state.driverStates[d.key] ?? INITIAL_DRIVER_STATE,
-        loadNextPage: () => {
-          const ds = stateRef.current.driverStates[d.key];
-          if (!ds || ds.loading || !ds.hasMore) {
-            return;
+          // If has availability check, must be resolved and true.
+          if (d.registration.checkAvailability) {
+            const available = state.providerAvailability[d.key];
+            if (available !== true) {
+              return false;
+            }
           }
 
-          const nextPage = ds.page + 1;
-          const query = stateRef.current.currentQuery;
-          if (!query) {
-            return;
-          }
+          return true;
+        })
+        .map((d) => ({
+          key: d.key,
+          registration: d.registration,
+          state: state.providerStates[d.key] ?? INITIAL_PROVIDER_STATE,
+          loadNextPage: () => {
+            const ds = stateRef.current.providerStates[d.key];
+            if (!ds || ds.loading || !ds.hasMore) {
+              return;
+            }
 
-          dispatch({ type: "SEARCH_START", key: d.key });
-          d.provider
-            .search(query, nextPage)
-            .then((result) => {
-              dispatch({
-                type: "SEARCH_SUCCESS",
-                key: d.key,
-                hits: result.hits,
-                hasMore: result.hasMore,
-                page: nextPage,
+            const nextPage = ds.page + 1;
+            const query = stateRef.current.currentQuery;
+            if (!query) {
+              return;
+            }
+
+            dispatch({ type: "SEARCH_START", key: d.key });
+            d.provider
+              .search(query, nextPage)
+              .then((result) => {
+                dispatch({
+                  type: "SEARCH_SUCCESS",
+                  key: d.key,
+                  hits: result.hits,
+                  hasMore: result.hasMore,
+                  page: nextPage,
+                });
+              })
+              .catch(() => {
+                dispatch({ type: "SEARCH_ERROR", key: d.key });
               });
-            })
-            .catch(() => {
-              dispatch({ type: "SEARCH_ERROR", key: d.key });
-            });
-        },
-      }));
-  }, [drivers, state.driverStates, state.driverAvailability]);
+          },
+        }));
+    }, [providers, state.providerStates, state.providerAvailability]);
 
   return {
-    drivers: activeDrivers,
+    providers: activeProviders,
     currentQuery: state.currentQuery,
     triggerSearch,
   };

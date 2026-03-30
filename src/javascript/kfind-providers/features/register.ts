@@ -1,5 +1,5 @@
 /**
- * Registers the UI features search driver.
+ * Registers the UI features search provider.
  *
  * Scans Jahia's UI extender registry for `adminRoute` and
  * `jExperienceMenuEntry` items matching the search query.
@@ -14,15 +14,19 @@
  */
 import { registry } from "@jahia/ui-extender";
 import i18n from "i18next";
-import type { KFindDriver, KFindResultsProvider, SearchHit } from "../types.ts";
+import type {
+  KFindProvider,
+  KFindResultsProvider,
+  SearchHit,
+} from "../types.ts";
 import {
   getSiteKey,
   getSearchLanguage,
   pushRouteNavigation,
 } from "../../kfind/shared/navigationUtils.ts";
 import {
-  isDriverEnabled,
-  getDriverMaxResults,
+  isProviderEnabled,
+  getProviderMaxResults,
 } from "../../kfind/shared/configUtils.ts";
 
 type FeatureRegistryEntry = {
@@ -95,12 +99,12 @@ function searchFeatures(query: string): SearchHit[] {
   return results;
 }
 
-const featureDriver: KFindDriver = {
+const featureProvider: KFindProvider = {
   priority: 10,
   title: "search.features.title",
   titleDefault: "Features",
-  isEnabled: () => isDriverEnabled("uiFeaturesEnabled"),
-  maxResults: () => getDriverMaxResults("uiFeaturesMaxResults", 2),
+  isEnabled: () => isProviderEnabled("uiFeaturesEnabled"),
+  maxResults: () => getProviderMaxResults("uiFeaturesMaxResults", 2),
   createSearchProvider: (): KFindResultsProvider => ({
     search: (query) =>
       Promise.resolve({ hits: searchFeatures(query), hasMore: false }),
@@ -109,4 +113,4 @@ const featureDriver: KFindDriver = {
   locate: (hit: SearchHit) => pushRouteNavigation(hit.path),
 };
 
-registry.add("kfindDriver", "kfind-features", featureDriver);
+registry.add("kfindProvider", "kfind-features", featureProvider);

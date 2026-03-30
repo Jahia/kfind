@@ -1,5 +1,5 @@
 /**
- * Registers the URL reverse lookup search driver.
+ * Registers the URL reverse lookup search provider.
  *
  * Resolves pasted live URLs to JCR nodes via vanity URL or direct path
  * matching. Only fires when the query looks like a URL (`canHandle`).
@@ -10,7 +10,7 @@
 import { registry } from "@jahia/ui-extender";
 import type {
   ApolloClientInstance,
-  KFindDriver,
+  KFindProvider,
   KFindResultsProvider,
   SearchHit,
 } from "../types.ts";
@@ -21,7 +21,7 @@ import {
   locateInJContent,
 } from "../../kfind/shared/navigationUtils.ts";
 import {
-  isDriverEnabled,
+  isProviderEnabled,
   getDefaultDisplayedResults,
 } from "../../kfind/shared/configUtils.ts";
 import { jcrNodeToSearchHit } from "../jcr/jcrSearchProvider.ts";
@@ -73,11 +73,11 @@ function createUrlReverseLookupProvider(
 const editNode = (hit: SearchHit) =>
   window.parent.CE_API?.edit({ path: hit.path });
 
-const urlReverseLookupDriver: KFindDriver = {
+const urlReverseLookupProvider: KFindProvider = {
   priority: 5,
   title: "search.urlReverseLookup.title",
   titleDefault: "Direct URL match",
-  isEnabled: () => isDriverEnabled("urlReverseLookupEnabled"),
+  isEnabled: () => isProviderEnabled("urlReverseLookupEnabled"),
   maxResults: () => getDefaultDisplayedResults(),
   canHandle: looksLikeUrl,
   createSearchProvider: createUrlReverseLookupProvider,
@@ -85,4 +85,8 @@ const urlReverseLookupDriver: KFindDriver = {
   edit: editNode,
 };
 
-registry.add("kfindDriver", "kfind-url-reverse-lookup", urlReverseLookupDriver);
+registry.add(
+  "kfindProvider",
+  "kfind-url-reverse-lookup",
+  urlReverseLookupProvider,
+);

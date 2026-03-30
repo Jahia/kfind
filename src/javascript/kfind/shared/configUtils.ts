@@ -21,10 +21,12 @@ export function getDefaultDisplayedResults(): number {
   return cfg()?.defaultDisplayedResults ?? 5;
 }
 
-export function isDriverEnabled(key: KFindKey): boolean {
+// TODO: Likely overkill to have such a useless utlity method
+export function isProviderEnabled(key: KFindKey): boolean {
   return cfg()?.[key] !== false;
 }
 
-export function getDriverMaxResults(key: KFindKey, fallback: number): number {
+// TODO: Likely overkill to have such a useless utility method
+export function getProviderMaxResults(key: KFindKey, fallback: number): number {
   return (cfg()?.[key] as number | undefined) ?? fallback;
 }

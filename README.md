@@ -1,6 +1,6 @@
 # kFind
 
-A Spotlight-style search modal for [Jahia CMS](https://www.jahia.com/) that lets editors quickly find and navigate to any content, page, media, feature, or URL directly from the authoring interface. Open it with **⌘K** (macOS) or **Ctrl+K** (Windows/Linux) and start typing — results appear instantly across multiple search drivers.
+A Spotlight-style search modal for [Jahia CMS](https://www.jahia.com/) that lets editors quickly find and navigate to any content, page, media, feature, or URL directly from the authoring interface. Open it with **⌘K** (macOS) or **Ctrl+K** (Windows/Linux) and start typing — results appear instantly across multiple search providers.
 
 ## Stack
 
@@ -20,13 +20,13 @@ A custom DOM event `kfind:open-search` can also open the modal programmatically 
 
 ## Search Sections
 
-The modal displays results in up to six sections, each powered by an independent search driver. Sections appear conditionally based on configuration and site capabilities.
+The modal displays results in up to six sections, each powered by an independent search provider. Sections appear conditionally based on configuration and site capabilities.
 
 **Direct URL Match** — When the query looks like a URL (starts with `http://`, `https://`, `/`, or contains a domain pattern), kFind resolves it against Jahia's vanity URLs and JCR paths via a custom GraphQL endpoint. Returns a single matching node if found.
 
 **Features** — Filters Jahia's UI registry in memory (no network call) to surface admin routes, jContent apps, and jExperience menu items matching the query. Results are instant and appear even before the minimum character threshold.
 
-**Media** — Searches for `jnt:file` nodes (images, videos, documents) via a JCR GraphQL query. Results include a 40×40 thumbnail preview when available. Fires independently of other search drivers.
+**Media** — Searches for `jnt:file` nodes (images, videos, documents) via a JCR GraphQL query. Results include a 40×40 thumbnail preview when available. Fires independently of other search providers.
 
 **Augmented Search** — When the site has a search index (`jmix:augmentedSearchIndexableSite` mixin), queries Jahia's Elasticsearch-backed augmented-search endpoint for pages, main resources, and documents. Supports server-side pagination and returns highlighted HTML excerpts.
 
@@ -50,7 +50,15 @@ init.ts → registerRoutes()
       └─ captures Apollo client → bridge
 ```
 
-The module registers itself via `@jahia/ui-extender` at app startup. Because the modal runs in its own React root (outside jcontent's tree), an Apollo client bridge captures jcontent's client instance and shares it across roots. The `useSearchOrchestration` hook coordinates all drivers: it checks augmented-search availability, debounces input, routes queries to the appropriate drivers, and aggregates results.
+The module registers itself via `@jahia/ui-extender` at app startup. Because the modal runs in its own React root (outside jcontent's tree), an Apollo client bridge captures jcontent's client instance and shares it across roots. The `useSearchOrchestration` hook coordinates all providers: it checks augmented-search availability, debounces input, routes queries to the appropriate providers, and aggregates results.
+
+### Extensibility: Third-Party Providers
+
+kFind provider discovery is registry-based. Built-in providers are loaded from `src/javascript/kfind-providers/registerAll.ts`, where each provider registers itself with:
+
+`registry.add("kfindProvider", "my-provider-key", providerDefinition)`
+
+Third-party Jahia modules can register additional providers by calling the same registry API in their own module init callback. No modification of kFind core files is required.
 
 ## Configuration
 

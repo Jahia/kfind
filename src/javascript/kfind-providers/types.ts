@@ -1,34 +1,34 @@
 /**
- * Driver API types for the kfindDriver registry pattern.
+ * Provider API types for the kfindProvider registry pattern.
  *
  * Architecture overview:
  * ────────────────────
  * kFind uses a plugin-based architecture where each search category
  * (features, JCR media, augmented search, URL reverse lookup, etc.) is
- * a self-contained "driver" that registers itself in the Jahia UI
- * extender registry under type `"kfindDriver"`.
+ * a self-contained "provider" that registers itself in the Jahia UI
+ * extender registry under type `"kfindProvider"`.
  *
  * The orchestration layer (`useSearchOrchestration`) and the rendering
- * layer (`KFindPanel`) are fully generic — they discover drivers at
- * runtime via `getRegisteredDrivers()` and have no knowledge of
- * individual driver implementations.
+ * layer (`KFindPanel`) are fully generic — they discover providers at
+ * runtime via `getRegisteredProviders()` and have no knowledge of
+ * individual provider implementations.
  *
  * To add a new search section (even from a separate Jahia module):
- *   1. Create a file that calls `registry.add("kfindDriver", "my-key", { ...KFindDriver })`
+ *   1. Create a file that calls `registry.add("kfindProvider", "my-key", { ...KFindProvider })`
  *   2. Import it at module init time.
- *   That's it — the new driver will appear in the search panel automatically.
+ *   That's it — the new provider will appear in the search panel automatically.
  *
  * Why imperative providers instead of React hooks?
  * ────────────────────────────────────────────────
- * React hooks cannot be called in a loop over a dynamic list of drivers.
- * Instead, each driver exposes a `createSearchProvider()` factory that
+ * React hooks cannot be called in a loop over a dynamic list of providers.
+ * Instead, each provider exposes a `createSearchProvider()` factory that
  * returns a plain object with `search()` and `reset()` methods. These
  * call `apolloClient.query()` directly (imperative), bypassing the need
  * for `useLazyQuery` or any hook-based API. The orchestration layer
  * manages all React state centrally via `useReducer`.
  */
-import {registry} from '@jahia/ui-extender';
-import type {ApolloClient, NormalizedCacheObject} from '@apollo/client';
+import { registry } from "@jahia/ui-extender";
+import type { ApolloClient, NormalizedCacheObject } from "@apollo/client";
 
 /** A single content search result (returned by both augmented search and JCR queries). */
 export type SearchHit = {
@@ -55,7 +55,7 @@ export type SearchResult = {
 };
 
 /**
- * Imperative search provider created by a driver's `createSearchProvider()` factory.
+ * Imperative search provider created by a provider's `createSearchProvider()` factory.
  *
  * Each provider instance is long-lived (created once on mount) and manages
  * its own query execution. The orchestration layer calls `search()` and
@@ -74,33 +74,33 @@ export type KFindResultsProvider = {
 };
 
 /**
- * Shape registered in the Jahia UI registry under type `"kfindDriver"`.
+ * Shape registered in the Jahia UI registry under type `"kfindProvider"`.
  *
- * Each driver declares everything the orchestration and rendering layers
- * need — without those layers knowing what kind of data the driver handles.
+ * Each provider declares everything the orchestration and rendering layers
+ * need — without those layers knowing what kind of data the provider handles.
  */
-export type KFindDriver = {
+export type KFindProvider = {
   /** Display order — lower values appear first. */
   priority: number;
   /** I18n key for the section title. */
   title: string;
   /** Fallback title when the i18n key is not resolved. */
   titleDefault: string;
-  /** Whether this driver is enabled (reads its own config key). */
+  /** Whether this provider is enabled (reads its own config key). */
   isEnabled: () => boolean;
   /** Maximum results to show initially (reads its own config key). */
   maxResults: () => number;
   /**
    * Optional async one-time availability check (e.g. site mixin query).
-   * Returns true if the driver should be active for the current site.
-   * When absent, the driver is always available (if enabled).
+   * Returns true if the provider should be active for the current site.
+   * When absent, the provider is always available (if enabled).
    * The orchestration layer caches the result per mount.
    */
   checkAvailability?: (client: ApolloClientInstance) => Promise<boolean>;
   /**
-   * Optional query filter — if provided, the driver only fires when
+   * Optional query filter — if provided, the provider only fires when
    * this returns true for the current query string (e.g. URL-like input).
-   * When absent, the driver fires for every query.
+   * When absent, the provider fires for every query.
    */
   canHandle?: (query: string) => boolean;
   /** Factory that creates the imperative search provider. Called once on mount. */
@@ -112,16 +112,16 @@ export type KFindDriver = {
 };
 
 /**
- * Reads all `kfindDriver` registrations from the Jahia UI registry,
+ * Reads all `kfindProvider` registrations from the Jahia UI registry,
  * sorted by ascending priority (lower values appear first in the UI).
  *
  * `registry.find()` returns `StoredService[]` which is a generic wrapper;
- * the cast to `KFindDriver[]` is safe because only kfindDriver
+ * the cast to `KFindProvider[]` is safe because only kfindProvider
  * entries match the filter and they are all registered with the correct shape.
  */
-export function getRegisteredDrivers(): KFindDriver[] {
-    const entries = registry.find({type: 'kfindDriver'});
-    return (entries as unknown as KFindDriver[]).sort(
-        (a, b) => a.priority - b.priority
-    );
+export function getRegisteredProviders(): KFindProvider[] {
+  const entries = registry.find({ type: "kfindProvider" });
+  return (entries as unknown as KFindProvider[]).sort(
+    (a, b) => a.priority - b.priority,
+  );
 }

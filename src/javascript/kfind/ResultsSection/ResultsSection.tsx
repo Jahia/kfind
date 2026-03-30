@@ -10,19 +10,19 @@
  *
  * Two-tier pagination:
  *   1. Client-side: `displayedCount` slices the `hits` array, starting
- *      at `maxResults` (the driver's configured initial count).
+ *      at `maxResults` (the provider's configured initial count).
  *   2. Server-side: when the user exhausts the local slice, `onLoadMore`
  *      triggers the next server-side page fetch in the orchestration layer.
  *
- * This component is fully driver-agnostic — it receives callbacks
+ * This component is fully provider-agnostic — it receives callbacks
  * (`onHitAction`, `onSecondaryAction`) from KFindPanel, which itself
- * delegates to the driver's `locate()` and `edit()` methods.
+ * delegates to the provider's `locate()` and `edit()` methods.
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Typography } from "@jahia/moonstone";
 import { useTranslation } from "react-i18next";
 import { ResultCard } from "../ResultCard/ResultCard.tsx";
-import type { SearchHit } from "../../kfind-drivers/types.ts";
+import type { SearchHit } from "../../kfind-providers/types.ts";
 import resultsLayout from "../shared/resultsTableLayout.module.css";
 import s from "./ResultsSection.module.css";
 

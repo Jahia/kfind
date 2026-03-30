@@ -1,22 +1,22 @@
 /**
- * Registers the augmented search driver.
+ * Registers the augmented search provider.
  *
  * Uses Jahia's augmented-search GraphQL endpoint (Elasticsearch-backed).
  * Only available on sites with the `jmix:augmentedSearchIndexableSite` mixin
  * (checked via `checkAugmentedAvailable()`).
  *
  * When augmented search IS available:
- *   - This driver handles pages, main resources, and documents.
- *   - The JCR pages and main resources drivers disable themselves
+ *   - This provider handles pages, main resources, and documents.
+ *   - The JCR pages and main resources providers disable themselves
  *     (their `checkAvailability` returns `!augmented`).
  *
  * When augmented search is NOT available:
- *   - This driver is hidden; JCR pages and main resources drivers take over.
+ *   - This provider is hidden; JCR pages and main resources providers take over.
  */
 import { registry } from "@jahia/ui-extender";
 import type {
   ApolloClientInstance,
-  KFindDriver,
+  KFindProvider,
   KFindResultsProvider,
   SearchHit,
 } from "../types.ts";
@@ -75,7 +75,7 @@ function createAugmentedSearchProvider(
 const editNode = (hit: SearchHit) =>
   window.parent.CE_API?.edit({ path: hit.path });
 
-const augmentedDriver: KFindDriver = {
+const augmentedProvider: KFindProvider = {
   priority: 30,
   title: "search.augmented.title",
   titleDefault: "Pages, main resources, and documents",
@@ -87,4 +87,4 @@ const augmentedDriver: KFindDriver = {
   edit: editNode,
 };
 
-registry.add("kfindDriver", "kfind-augmented", augmentedDriver);
+registry.add("kfindProvider", "kfind-augmented", augmentedProvider);
