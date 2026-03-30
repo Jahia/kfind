@@ -19,21 +19,22 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
  * Extends the Jahia GraphQL Query type with a {@code urlReverseLookup} field.
  * <p>
- * Given a live website URL, this extension resolves the target JCR node by:
+ * Given a live website URL, this extension resolves matching JCR nodes by:
  * <ol>
  * <li>Parsing the URL path</li>
- * <li>Searching for an active vanity URL matching that path</li>
- * <li>If a vanity URL match is found, returning the vanity URL's target
- * node</li>
- * <li>If no vanity URL match is found, attempting to resolve the path
- * as a direct JCR path under {@code /sites/{siteKey}}</li>
+ * <li>Building candidate paths (raw, /sites/{siteKey}+path,
+ * /sites/{siteKey}/home+path)</li>
+ * <li>Resolving each candidate via {@link URLResolverFactory}</li>
+ * <li>Returning all distinct resolved nodes</li>
  * </ol>
  */
 @GraphQLTypeExtension(DXGraphQLProvider.Query.class)
@@ -45,16 +46,16 @@ public class KFindQueryExtensions {
     private static final Pattern SITE_KEY_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
     /**
-     * Resolve a live website URL to its target JCR node.
+     * Resolve a live website URL to all matching JCR nodes.
      *
      * @param url     the full URL or path fragment to look up
      * @param siteKey the Jahia site key to scope the search
-     * @return the matching GqlJcrNode, or null if not found
+     * @return a list of matching GqlJcrNode instances (may be empty)
      */
     @GraphQLField
     @GraphQLName("urlReverseLookup")
-    @GraphQLDescription("Resolve a live website URL to its JCR node via vanity URL or direct path matching")
-    public static GqlJcrNode urlReverseLookup(
+    @GraphQLDescription("Resolve a live website URL to its JCR nodes via vanity URL or direct path matching")
+    public static List<GqlJcrNode> urlReverseLookup(
             @GraphQLNonNull @GraphQLName("url") @GraphQLDescription("The URL or path to look up") String url,
             @GraphQLNonNull @GraphQLName("siteKey") @GraphQLDescription("The Jahia site key") String siteKey) {
         logger.debug("[urlReverseLookup] START — url='{}' siteKey='{}'", url, siteKey);
@@ -69,22 +70,26 @@ public class KFindQueryExtensions {
                     .getCurrentUserSession("default");
             String workspace = session.getWorkspace().getName();
 
-            // Extract the path portion from the URL
             String path = extractPath(url);
             logger.debug("[urlReverseLookup] extractPath('{}') => '{}'", url, path);
 
-            // Try all service-backed variants first; caching in Jahia services keeps this
-            // cheap.
+            List<GqlJcrNode> results = new ArrayList<>();
+            Set<String> seenPaths = new LinkedHashSet<>();
+
             for (String candidate : buildServiceCandidates(path, siteKey)) {
                 GqlJcrNode resolved = resolveWithUrlResolver(candidate, siteKey, workspace);
                 if (resolved != null) {
-                    logger.debug("[urlReverseLookup] Resolved via URLResolver at candidate='{}'", candidate);
-                    return resolved;
+                    String nodePath = resolved.getPath();
+                    if (seenPaths.add(nodePath)) {
+                        logger.debug("[urlReverseLookup] Resolved via URLResolver at candidate='{}' → node='{}'",
+                                candidate, nodePath);
+                        results.add(resolved);
+                    }
                 }
             }
 
-            logger.debug("[urlReverseLookup] END — no node found for url='{}' path='{}'", url, path);
-            return null;
+            logger.debug("[urlReverseLookup] END — {} node(s) found for url='{}'", results.size(), url);
+            return results;
         } catch (RepositoryException e) {
             logger.debug("[urlReverseLookup] RepositoryException for url='{}': {}", url, e.getMessage(), e);
             throw new RuntimeException("Error during URL reverse lookup: " + e.getMessage(), e);
@@ -128,12 +133,38 @@ public class KFindQueryExtensions {
 
     private static Set<String> buildServiceCandidates(String rawPath, String siteKey) {
         String siteRoot = "/sites/" + siteKey;
+        List<String> generatedCandidates = new ArrayList<>();
+
+        generatedCandidates.add(rawPath);
+        generatedCandidates.add(siteRoot + rawPath);
+        generatedCandidates.add(siteRoot + "/home" + rawPath);
+
         Set<String> candidates = new LinkedHashSet<>();
-        candidates.add(rawPath);
-        candidates.add(siteRoot + rawPath);
-        candidates.add(siteRoot + "/home" + rawPath);
+        List<String> duplicates = new ArrayList<>();
+        for (String candidate : generatedCandidates) {
+            String normalized = normalizeCandidatePath(candidate);
+            if (!candidates.add(normalized)) {
+                duplicates.add(normalized);
+            }
+        }
+
+        if (!duplicates.isEmpty()) {
+            logger.debug("[buildServiceCandidates] removed duplicate candidate(s): {}", duplicates);
+        }
         logger.debug("[buildServiceCandidates] {} candidate(s): {}", candidates.size(), candidates);
         return candidates;
+    }
+
+    private static String normalizeCandidatePath(String candidate) {
+        if (candidate == null || candidate.isEmpty()) {
+            return "/";
+        }
+
+        String normalized = candidate.startsWith("/") ? candidate : "/" + candidate;
+        if (normalized.length() > 1 && normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        return normalized;
     }
 
     private static GqlJcrNode resolveWithUrlResolver(String path, String siteKey, String workspace) {

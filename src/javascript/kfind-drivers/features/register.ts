@@ -20,6 +20,10 @@ import {
   getSearchLanguage,
   pushRouteNavigation,
 } from "../../kfind/shared/navigationUtils.ts";
+import {
+  isDriverEnabled,
+  getDriverMaxResults,
+} from "../../kfind/shared/configUtils.ts";
 
 type FeatureRegistryEntry = {
   type: "adminRoute" | "jExperienceMenuEntry";
@@ -30,7 +34,9 @@ type FeatureRegistryEntry = {
 };
 
 function getFeatureRegistryEntries(): FeatureRegistryEntry[] {
-  const adminRoutes = registry.find({ type: "adminRoute" }) as unknown as FeatureRegistryEntry[];
+  const adminRoutes = registry.find({
+    type: "adminRoute",
+  }) as unknown as FeatureRegistryEntry[];
   const jExperienceMenuEntries = registry.find({
     type: "jExperienceMenuEntry",
   }) as unknown as FeatureRegistryEntry[];
@@ -93,9 +99,8 @@ const featureDriver: KFindDriver = {
   priority: 10,
   title: "search.features.title",
   titleDefault: "Features",
-  isEnabled: () =>
-    window.contextJsParameters.kfind?.uiFeaturesEnabled !== false,
-  maxResults: () => window.contextJsParameters.kfind?.uiFeaturesMaxResults ?? 2,
+  isEnabled: () => isDriverEnabled("uiFeaturesEnabled"),
+  maxResults: () => getDriverMaxResults("uiFeaturesMaxResults", 2),
   createSearchProvider: (): KFindResultsProvider => ({
     search: (query) =>
       Promise.resolve({ hits: searchFeatures(query), hasMore: false }),

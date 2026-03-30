@@ -26,6 +26,7 @@ import {
   getSearchLanguage,
   locateInJContent,
 } from "../../kfind/shared/navigationUtils.ts";
+import { getDefaultDisplayedResults } from "../../kfind/shared/configUtils.ts";
 import { SEARCH_QUERY } from "./augmentedSearchQuery.ts";
 import { checkAugmentedAvailable } from "../../kfind/shared/checkAugmentedAvailable.ts";
 
@@ -79,8 +80,7 @@ const augmentedDriver: KFindDriver = {
   title: "search.augmented.title",
   titleDefault: "Pages, main resources, and documents",
   isEnabled: () => true,
-  maxResults: () =>
-    window.contextJsParameters.kfind?.defaultDisplayedResults ?? 5,
+  maxResults: () => getDefaultDisplayedResults(),
   checkAvailability: (client) => checkAugmentedAvailable(client, getSiteKey()),
   createSearchProvider: createAugmentedSearchProvider,
   locate: (hit: SearchHit) => locateInJContent(hit.path, hit.nodeType),

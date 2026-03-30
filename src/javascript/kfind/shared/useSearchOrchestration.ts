@@ -23,17 +23,7 @@ import {
   type KFindResultsProvider,
   type SearchHit,
 } from "../../kfind-drivers/types.ts";
-import { getMinSearchChars } from "./configUtils.ts";
-
-// ── Debounce delay ──
-// A single global timer gates ALL drivers, so the UI doesn't flash intermediate
-// states while the user is still typing. The delay is configurable server-side
-// via kfind.jsp → window.contextJsParameters.kfind.jcrFindDelayInTypingToLaunchSearch.
-function getDebounceDelay(): number {
-  return (
-    window.contextJsParameters.kfind?.jcrFindDelayInTypingToLaunchSearch ?? 300
-  );
-}
+import { getMinSearchChars, getDebounceDelay } from "./configUtils.ts";
 
 // ── Per-driver state ──
 // Each driver gets its own independent state slice, keyed by the driver's
