@@ -43,6 +43,8 @@ declare interface Window {
     edit: (opts: { path: string }) => void;
   };
   jahia?: {
+    /** Jahia's shared Apollo client — available before any module's registerRoutes fires. */
+    apolloClient?: import("@apollo/client").ApolloClient<import("@apollo/client").NormalizedCacheObject>;
     routerHistory?: { push: (path: string) => void; [k: string]: unknown };
     reduxStore?: {
       dispatch: (action: { type: string; payload?: unknown }) => void;

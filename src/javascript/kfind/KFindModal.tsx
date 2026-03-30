@@ -13,17 +13,19 @@ import { useTranslation } from "react-i18next";
 import { ApolloProvider } from "@apollo/client";
 import { Modal, ModalFooter, Typography } from "@jahia/moonstone";
 import { KFindPanel } from "./KFindPanel/KFindPanel.tsx";
-import { getApolloClient, onApolloClientReady } from "./apolloClientBridge.ts";
+function logModalDebug(message: string, error: unknown): void {
+  if (!__DEV_BUILD__) return;
+  // eslint-disable-next-line no-console
+  console.debug(`[kfind][modal] ${message}`, error);
+}
 
 export const KFindModal = () => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [apolloClient, setApolloClientState] = useState(getApolloClient);
 
-  // Wait for jcontent's Apollo client to be captured from the primary nav tree
-  useEffect(() => {
-    onApolloClientReady(() => setApolloClientState(getApolloClient()));
-  }, []);
+  // Apollo client is provided by Jahia's platform on window.jahia.apolloClient
+  // before any module's registerRoutes fires — no async wait needed.
+  const apolloClient = window.jahia?.apolloClient;
 
   // ── Keyboard shortcut & custom event listeners ──
   // Registered on both the iframe document and the parent document so the
@@ -46,8 +48,9 @@ export const KFindModal = () => {
       if (window.parent && window.parent.document && window.parent !== window) {
         targets.push(window.parent.document);
       }
-    } catch (_) {
+    } catch (error) {
       // cross-origin parent — skip
+      logModalDebug("Unable to register parent keyboard listener", error);
     }
 
     targets.forEach((t) => t.addEventListener("keydown", handleKeyDown));
@@ -58,10 +61,14 @@ export const KFindModal = () => {
     };
   }, []);
 
-  if (!apolloClient) return null;
+  if (!apolloClient) {
+    // eslint-disable-next-line no-console
+    console.error("[kfind] Apollo client is not available — modal cannot render.");
+    return null;
+  }
 
   return (
-    <ApolloProvider client={apolloClient}>
+    <>
       <style>{`
         .search-modal.moonstone-modal { top: 32px; bottom: 32px; height: auto; max-height: none; }
         .search-modal .moonstone-modal_body { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
@@ -82,7 +89,9 @@ export const KFindModal = () => {
               overflow: "hidden",
             }}
           >
-            <KFindPanel focusOnField onNavigate={() => setIsOpen(false)} />
+            <ApolloProvider client={apolloClient}>
+              <KFindPanel focusOnField onNavigate={() => setIsOpen(false)} />
+            </ApolloProvider>
           </div>
           <ModalFooter>
             <div
@@ -108,6 +117,6 @@ export const KFindModal = () => {
           </ModalFooter>
         </>
       </Modal>
-    </ApolloProvider>
+    </>
   );
 };

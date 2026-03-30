@@ -25,7 +25,6 @@ import {
   Typography,
 } from "@jahia/moonstone";
 import { useTranslation } from "react-i18next";
-import { sanitizeHtml } from "../shared/htmlUtils.ts";
 import s from "./ResultCard.module.css";
 
 const MAX_NAME_LENGTH = 80;
@@ -110,9 +109,7 @@ export const ResultCard = ({
           </div>
           {excerpt && (
             <Typography variant="caption" className={s.resultRowExcerpt}>
-              <span
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(excerpt) }}
-              />
+              <span dangerouslySetInnerHTML={{ __html: excerpt }} />
             </Typography>
           )}
         </div>

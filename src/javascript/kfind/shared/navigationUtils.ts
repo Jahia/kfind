@@ -2,6 +2,12 @@
  * Jahia context resolution and jContent SPA navigation helpers.
  */
 
+function logNavigationDebug(message: string, error: unknown): void {
+  if (!__DEV_BUILD__) return;
+  // eslint-disable-next-line no-console
+  console.debug(`[kfind][navigation] ${message}`, error);
+}
+
 export function getSiteKey(): string {
   if (window.contextJsParameters.siteKey) {
     return window.contextJsParameters.siteKey;
@@ -20,6 +26,40 @@ export function getUiLanguage(): string {
 
 export function getSearchLanguage(): string {
   return window.contextJsParameters.lang ?? "en";
+}
+
+/**
+ * Pushes a URL in the parent window history and dispatches a synthetic
+ * popstate so jContent's router reacts without a full page reload.
+ * Centralized to keep feature-navigation and content-navigation behavior aligned.
+ */
+export function pushParentNavigation(url: string): void {
+  const navKey = String(Date.now());
+  window.parent.history.pushState({ key: navKey }, "", url);
+  window.parent.dispatchEvent(
+    new PopStateEvent("popstate", { state: { key: navKey } }),
+  );
+}
+
+/**
+ * Navigates the parent Jahia shell to an in-app route path (admin routes,
+ * jExperience, etc.) using the connected React Router history when available,
+ * falling back to a raw pushState + synthetic popstate.
+ *
+ * `path` must be the in-app path WITHOUT the Jahia context root
+ * (e.g. `/administration/mysite/jExperience/...`).
+ *
+ * The React Router history was created with `basename: urlbase` (typically `/jahia`),
+ * so `routerHistory.push(path)` and the raw `pushState('/jahia' + path)` fallback
+ * are functionally equivalent.
+ */
+export function pushRouteNavigation(path: string): void {
+  const routerHistory = window.parent.jahia?.routerHistory;
+  if (routerHistory) {
+    routerHistory.push(path);
+  } else {
+    pushParentNavigation(`/jahia${path}`);
+  }
 }
 
 /**
@@ -64,41 +104,28 @@ export function locateInJContent(nodePath: string, nodeType?: string): void {
     urlPath = parentPath.replace(siteBase, "") || "/";
   }
   // Force Page Builder view for pages and content folders.
-  // We must both set localStorage (read by extractParamsFromUrl on URL change)
-  // and dispatch SET_TABLE_VIEW_MODE to Redux so jContent's store listener
-  // does not overwrite localStorage with the stale viewMode after navigation.
+  // localStorage is the source read by jcontent's extractParamsFromUrl when
+  // processing the LOCATION_CHANGE fired by pushRouteNavigation below.
   if (mode === "pages" || mode === "content-folders") {
     try {
       window.parent.localStorage.setItem(
         `jcontent-previous-tableView-viewMode-${site}-${mode}`,
         "pageBuilder",
       );
-    } catch {
+    } catch (error) {
       // localStorage may be blocked (privacy settings) — continue anyway
-    }
-    try {
-      window.parent.jahia?.reduxStore?.dispatch({
-        type: "SET_TABLE_VIEW_MODE",
-        payload: "pageBuilder",
-      });
-    } catch {
-      // reduxStore may not be accessible in all contexts
+      logNavigationDebug("Unable to persist pageBuilder viewMode", error);
     }
   }
 
-  const encodedPath = urlPath
-    .split("/")
-    .map((s) => (s ? encodeURIComponent(s) : ""))
-    .join("/");
+  // Path encoding mirrors jcontent's buildUrl: encodeURIComponent every
+  // non-slash character (JContent.utils.js / JContent.redux.js).
+  const encodedPath = urlPath.replace(/[^/]/g, encodeURIComponent);
 
-  const newUrl = `/jahia/jcontent/${site}/${language}/${mode}${encodedPath}`;
-  const navKey = String(Date.now());
-  // Push and fire a synthetic popstate so React Router re-renders without a
-  // full page reload.
-  window.parent.history.pushState({ key: navKey }, "", newUrl);
-  window.parent.dispatchEvent(
-    new PopStateEvent("popstate", { state: { key: navKey } }),
-  );
+  // pushRouteNavigation uses routerHistory.push() (basename '/jahia') which
+  // dispatches LOCATION_CHANGE synchronously. jcontent's viewModeReducer then
+  // calls extractParamsFromUrl, which reads 'pageBuilder' from localStorage.
+  pushRouteNavigation(`/jcontent/${site}/${language}/${mode}${encodedPath}`);
 
   // For media files: open jContent's preview drawer for the located file.
   // CM_DRAWER_STATES.SHOW = 2 (from jcontent redux/JContent.redux.js)
@@ -112,8 +139,9 @@ export function locateInJContent(nodePath: string, nodeType?: string): void {
         type: "CM_SET_PREVIEW_STATE",
         payload: 2,
       });
-    } catch {
+    } catch (error) {
       // reduxStore may not be accessible in all contexts
+      logNavigationDebug("Unable to open media preview drawer", error);
     }
   }
 }
