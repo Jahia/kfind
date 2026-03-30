@@ -28,7 +28,7 @@ type ReduxActionEntry = {
 };
 
 function logNavigationDebug(message: string, error: unknown): void {
-  if (!__DEV_BUILD__) {
+  if (!import.meta.env.DEV) {
     return;
   }
 
@@ -36,7 +36,7 @@ function logNavigationDebug(message: string, error: unknown): void {
 }
 
 function logNavigationInfo(message: string, data?: unknown): void {
-  if (!__DEV_BUILD__) {
+  if (!import.meta.env.DEV) {
     return;
   }
 

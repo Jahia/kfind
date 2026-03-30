@@ -7,9 +7,6 @@ export default defineConfig(({ mode }) => ({
     minify: mode !== "development",
     sourcemap: mode === "development",
   },
-  define: {
-    __DEV_BUILD__: mode === "development",
-  },
   plugins: [
     jahia({
       exposes: {

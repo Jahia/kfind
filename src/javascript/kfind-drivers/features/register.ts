@@ -24,9 +24,18 @@ import {
 type FeatureRegistryEntry = {
   type: "adminRoute" | "jExperienceMenuEntry";
   key: string;
+  label?: string;
   path?: string;
   targets?: Array<{ id: string }>;
 };
+
+function getFeatureRegistryEntries(): FeatureRegistryEntry[] {
+  const adminRoutes = registry.find({ type: "adminRoute" }) as unknown as FeatureRegistryEntry[];
+  const jExperienceMenuEntries = registry.find({
+    type: "jExperienceMenuEntry",
+  }) as unknown as FeatureRegistryEntry[];
+  return [...adminRoutes, ...jExperienceMenuEntries];
+}
 
 function buildFeatureRoute(entry: FeatureRegistryEntry): string {
   // This route resolution should be provided by the Jahia UI framework,
@@ -53,17 +62,10 @@ function buildFeatureRoute(entry: FeatureRegistryEntry): string {
 
 function searchFeatures(query: string): SearchHit[] {
   const trimmed = query.trim().toLowerCase();
-  const uiRegistry = window.jahia?.uiExtender?.registry?.registry;
-  if (!uiRegistry) {
-    return [];
-  }
+  const entries = getFeatureRegistryEntries();
 
   const results: SearchHit[] = [];
-  for (const entry of Object.values(uiRegistry)) {
-    if (entry.type !== "adminRoute" && entry.type !== "jExperienceMenuEntry") {
-      continue;
-    }
-
+  for (const entry of entries) {
     const label: string = entry.label ? i18n.t(entry.label) : entry.key;
     if (
       !label.toLowerCase().includes(trimmed) &&
@@ -72,7 +74,7 @@ function searchFeatures(query: string): SearchHit[] {
       continue;
     }
 
-    const path = buildFeatureRoute(entry as FeatureRegistryEntry);
+    const path = buildFeatureRoute(entry);
 
     const typeLabel = i18n.t("search.features.chip", "Feature");
     results.push({

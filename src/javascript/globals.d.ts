@@ -1,4 +1,4 @@
-declare const __DEV_BUILD__: boolean;
+/// <reference types="vite/client" />
 
 declare interface Window {
   contextJsParameters: {
@@ -44,7 +44,9 @@ declare interface Window {
   };
   jahia?: {
     /** Jahia's shared Apollo client — available before any module's registerRoutes fires. */
-    apolloClient?: import('@apollo/client').ApolloClient<import('@apollo/client').NormalizedCacheObject>;
+    apolloClient?: import("@apollo/client").ApolloClient<
+      import("@apollo/client").NormalizedCacheObject
+    >;
     routerHistory?: { push: (path: string) => void; [k: string]: unknown };
     reduxStore?: {
       dispatch: (action: unknown) => unknown;
@@ -70,7 +72,7 @@ declare interface Window {
 
 // __BUILD_TIME__ is no longer a compile-time define; build time is served via contextJsParameters.kfind.buildTime from the JSP
 
-declare module '*.module.css' {
+declare module "*.module.css" {
   const classes: { readonly [key: string]: string };
   export default classes;
 }

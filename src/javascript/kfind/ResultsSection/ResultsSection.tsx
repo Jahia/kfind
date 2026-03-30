@@ -98,7 +98,7 @@ export const ResultsSection = ({
 
   const renderRows = useCallback(
     () =>
-      visibleHits.map((hit, index) => (
+      visibleHits.map((hit) => (
         <ResultCard
           key={hit.id}
           title={hit.displayableName}
@@ -106,7 +106,7 @@ export const ResultsSection = ({
           path={hit.path}
           excerpt={hit.excerpt}
           thumbnailUrl={hit.thumbnailUrl}
-          tabIndex={index === 0 ? 0 : -1}
+          tabIndex={0}
           scrollContainerRef={scrollContainerRef}
           inputWrapperRef={inputWrapperRef}
           onAction={() => onHitAction(hit)}
