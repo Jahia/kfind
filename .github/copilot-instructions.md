@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Jahia OSGi module (frontend-only, no Java backend) providing a Spotlight-style search modal (⌘K / Ctrl+K) for Jahia CMS. Searches content via augmented search with a JCR fallback.
+Jahia OSGi module (primarily frontend, with a lightweight Java GraphQL extension) providing a Spotlight-style search modal (⌘K / Ctrl+K) for Jahia CMS. Searches content via augmented search with a JCR fallback.
 
 ## Stack
 
@@ -12,6 +12,13 @@ Jahia OSGi module (frontend-only, no Java backend) providing a Spotlight-style s
 - **react-i18next** for i18n (namespace `kFind`, locales: en/fr/de)
 - **CSS Modules** for styling (`.module.css`)
 - Java 17, Maven 3, Node LTS, Yarn 4 (managed via `mise.toml`)
+
+## Java Implementation
+
+- Java backend code lives in `src/main/java/org/jahia/pm/modules/kfind/graphql/` and is intentionally limited to GraphQL extension wiring.
+- `KFindQueryExtensions` adds the `urlReverseLookup(url, siteKey)` GraphQL query used by the UI to resolve live URLs to Jahia content paths.
+- `KFindGraphQLExtensionProvider` registers the extension through OSGi (`DXGraphQLExtensionsProvider`) for Jahia runtime discovery.
+- Keep backend additions aligned with OSGi service patterns documented in `contributing.md`.
 
 ## Build & Deploy
 
