@@ -19,6 +19,7 @@ import {
   getSiteKey,
   getSearchLanguage,
 } from "../../kfind/shared/navigationUtils.ts";
+import { withStaleResponseFiltering } from "../providerUtils.ts";
 
 const PAGE_SIZE = 10;
 
@@ -45,40 +46,30 @@ export function createJcrSearchProvider(
   client: ApolloClientInstance,
   queryDoc: DocumentNode,
 ): KFindResultsProvider {
-  let activeQuery = "";
+  return withStaleResponseFiltering(async (query, page) => {
+    const sitePath = `/sites/${getSiteKey()}`;
 
-  return {
-    search: async (query, page) => {
-      activeQuery = query;
-      const sitePath = `/sites/${getSiteKey()}`;
+    // Request PAGE_SIZE + 1 to check if there are more items to paginate
+    const limit = PAGE_SIZE + 1;
 
-      const result = await client.query<{
-        jcr: { nodesByCriteria: { nodes: GqlJcrNode[] } };
-      }>({
-        query: queryDoc,
-        variables: {
-          searchTerm: query,
-          sitePath,
-          language: getSearchLanguage(),
-          limit: PAGE_SIZE,
-          offset: page * PAGE_SIZE,
-        },
-        fetchPolicy: "network-only",
-      });
+    const result = await client.query<{
+      jcr: { nodesByCriteria: { nodes: GqlJcrNode[] } };
+    }>({
+      query: queryDoc,
+      variables: {
+        searchTerm: query,
+        sitePath,
+        language: getSearchLanguage(),
+        limit,
+        offset: page * PAGE_SIZE,
+      },
+      fetchPolicy: "network-only",
+    });
 
-      // Discard stale responses.
-      if (activeQuery !== query) {
-        return { hits: [], hasMore: false };
-      }
+    const nodes = result.data?.jcr?.nodesByCriteria?.nodes ?? [];
+    const hasMore = nodes.length > PAGE_SIZE;
+    const hits = nodes.slice(0, PAGE_SIZE).map(jcrNodeToSearchHit);
 
-      // Determine hasMore by checking if we received a full page — JCR's
-      // nodesByCriteria doesn't return totalHits, so this is the best heuristic.
-      const nodes = result.data?.jcr?.nodesByCriteria?.nodes ?? [];
-      const hits = nodes.map(jcrNodeToSearchHit);
-      return { hits, hasMore: hits.length === PAGE_SIZE };
-    },
-    reset: () => {
-      activeQuery = "";
-    },
-  };
+    return { hits, hasMore };
+  });
 }

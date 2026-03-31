@@ -354,20 +354,19 @@ export const useSearchOrchestration = (
   }, [searchValue]);
 
   // ── 7. Effect: re-fire search when availability resolves ──
-  // Availability checks are async — they may resolve AFTER the debounce
-  // already fired. When that happens, we re-fire the search so that
-  // newly-available providers get their results too.
+  // Availability checks are async — they may resolve AFTER the initial
+  // search already fired. When that happens, we re-fire the search so that
+  // newly-available providers get their results too. We intentionally do NOT
+  // clear an active debounce here, so we don't interrupt the user's typing.
   useEffect(() => {
     if (!state.availabilityResolved) {
       return;
     }
 
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-      debounceRef.current = null;
-    }
-
-    if (searchValue.trim().length >= getMinSearchChars()) {
+    if (
+      !debounceRef.current &&
+      searchValue.trim().length >= getMinSearchChars()
+    ) {
       executeSearchRef.current(searchValue);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

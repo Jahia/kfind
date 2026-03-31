@@ -29,51 +29,37 @@ import {
 import { getDefaultDisplayedResults } from "../../kfind/shared/configUtils.ts";
 import { SEARCH_QUERY } from "./augmentedSearchQuery.ts";
 import { checkAugmentedAvailable } from "../../kfind/shared/checkAugmentedAvailable.ts";
+import {
+  openContentEditor,
+  withStaleResponseFiltering,
+} from "../providerUtils.ts";
 
 const PAGE_SIZE = 10;
 
 function createAugmentedSearchProvider(
   client: ApolloClientInstance,
 ): KFindResultsProvider {
-  let activeQuery = "";
+  return withStaleResponseFiltering(async (query, page) => {
+    const result = await client.query<{
+      search: { results: { totalHits: number; hits: GqlSearchHitV2[] } };
+    }>({
+      query: SEARCH_QUERY,
+      variables: {
+        q: query,
+        siteKeys: [getSiteKey()],
+        language: getSearchLanguage(),
+        size: PAGE_SIZE,
+        page,
+      },
+      fetchPolicy: "network-only",
+    });
 
-  return {
-    search: async (query, page) => {
-      activeQuery = query;
+    const hits: SearchHit[] = result.data?.search?.results?.hits ?? [];
+    const total = result.data?.search?.results?.totalHits ?? 0;
 
-      const result = await client.query<{
-        search: { results: { totalHits: number; hits: GqlSearchHitV2[] } };
-      }>({
-        query: SEARCH_QUERY,
-        variables: {
-          q: query,
-          siteKeys: [getSiteKey()],
-          language: getSearchLanguage(),
-          size: PAGE_SIZE,
-          page,
-        },
-        fetchPolicy: "network-only",
-      });
-
-      // Discard stale responses — a newer search may have started while
-      // this network request was in-flight.
-      if (activeQuery !== query) {
-        return { hits: [], hasMore: false };
-      }
-
-      const hits: SearchHit[] = result.data?.search?.results?.hits ?? [];
-      const total = result.data?.search?.results?.totalHits ?? 0;
-
-      return { hits, hasMore: hits.length + page * PAGE_SIZE < total };
-    },
-    reset: () => {
-      activeQuery = "";
-    },
-  };
+    return { hits, hasMore: hits.length + page * PAGE_SIZE < total };
+  });
 }
-
-const editNode = (hit: SearchHit) =>
-  window.parent.CE_API?.edit({ path: hit.path });
 
 const augmentedProvider: KFindProvider = {
   priority: 30,
@@ -84,7 +70,7 @@ const augmentedProvider: KFindProvider = {
   checkAvailability: (client) => checkAugmentedAvailable(client, getSiteKey()),
   createSearchProvider: createAugmentedSearchProvider,
   locate: (hit: SearchHit) => locateInJContent(hit.path, hit.nodeType),
-  edit: editNode,
+  edit: openContentEditor,
 };
 
 registry.add("kfindProvider", "kfind-augmented", augmentedProvider);

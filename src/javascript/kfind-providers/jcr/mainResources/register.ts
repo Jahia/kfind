@@ -19,9 +19,7 @@ import {
 import { checkAugmentedAvailable } from "../../../kfind/shared/checkAugmentedAvailable.ts";
 import { JCR_MAIN_RESOURCES_BY_CRITERIA_QUERY } from "./query.ts";
 import { createJcrSearchProvider } from "../jcrSearchProvider.ts";
-
-const editNode = (hit: SearchHit) =>
-  window.parent.CE_API?.edit({ path: hit.path });
+import { openContentEditor } from "../../providerUtils.ts";
 
 const mainResourcesProvider: KFindProvider = {
   priority: 32,
@@ -34,7 +32,7 @@ const mainResourcesProvider: KFindProvider = {
   createSearchProvider: (client) =>
     createJcrSearchProvider(client, JCR_MAIN_RESOURCES_BY_CRITERIA_QUERY),
   locate: (hit: SearchHit) => locateInJContent(hit.path, hit.nodeType),
-  edit: editNode,
+  edit: openContentEditor,
 };
 
 registry.add(

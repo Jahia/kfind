@@ -67,26 +67,26 @@ export const KFindHeader = ({
   }, [inputWrapperRef]);
 
   return (
-    <div className={s.header}>
-      <div className={s.titleRow}>
-        <Typography variant="title">
-          {t("search.modal.title", "Welcome to kFind")}
-        </Typography>
-        <Typography variant="caption" className={s.siteInfo}>
-          {t("search.modal.siteInfo", "Searching in {{site}}, {{language}}", {
+      <div className={s.header}>
+          <div className={s.titleRow}>
+              <Typography variant="title">
+                  {t("search.modal.title", "Welcome to kFind")}
+              </Typography>
+              <Typography variant="caption" className={s.siteInfo}>
+                  {t("search.modal.siteInfo", "Searching in {{site}}, {{language}}", {
             site: getSiteKey(),
             language: getSearchLanguage(),
           })}
-        </Typography>
-      </div>
-      <div ref={inputWrapperRef}>
-        <form role="search" onSubmit={handleSubmit}>
-          <Input
+              </Typography>
+          </div>
+          <div ref={inputWrapperRef}>
+              <form role="search" onSubmit={handleSubmit}>
+                  <Input
             size="big"
             type="search"
             placeholder={t("search.placeholder", "Search…")}
             value={searchValue}
-            icon={<Search />}
+            icon={<Search/>}
             focusOnField={focusOnField}
             onChange={(e) => onSearchChange(e.target.value)}
             onKeyDown={(e) => {
@@ -99,8 +99,8 @@ export const KFindHeader = ({
             }}
             onClear={onSearchClear}
           />
-        </form>
+              </form>
+          </div>
       </div>
-    </div>
   );
 };

@@ -54,8 +54,8 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
   const handleSearchClear = useCallback(() => setSearchValue(""), []);
 
   return (
-    <div className={s.panel}>
-      <KFindHeader
+      <div className={s.panel}>
+          <KFindHeader
         searchValue={searchValue}
         focusOnField={focusOnField}
         scrollContainerRef={scrollContainerRef}
@@ -65,19 +65,19 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
         onTriggerSearch={triggerSearch}
       />
 
-      <div ref={scrollContainerRef} className={styles.scrollContainer}>
-        {/* ── Empty state ── */}
-        {trimmedQuery.length < minChars && !hasAnyResults && (
-          <EmptyData
-            icon={<Search size="big" />}
+          <div ref={scrollContainerRef} className={styles.scrollContainer}>
+              {/* ── Empty state ── */}
+              {trimmedQuery.length < minChars && !hasAnyResults && (
+              <EmptyData
+            icon={<Search size="big"/>}
             title={t("search.empty.title", "Find anything.")}
             message={t("search.empty.hint", { min: minChars })}
           />
         )}
 
-        {/* ── Result sections — one per active provider ── */}
-        {providers.map(({ key, registration, state, loadNextPage }) => (
-          <ResultsSection
+              {/* ── Result sections — one per active provider ── */}
+              {providers.map(({ key, registration, state, loadNextPage }) => (
+                  <ResultsSection
             key={key}
             title={t(registration.title, registration.titleDefault)}
             hits={state.allHits}
@@ -91,17 +91,15 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
               registration.locate(hit);
               onNavigate?.();
             }}
-            onSecondaryAction={
-              registration.edit ? (hit) => registration.edit!(hit) : undefined
-            }
+            onSecondaryAction={registration.edit ? (hit) => registration.edit!(hit) : undefined}
             onLoadMore={loadNextPage}
           />
         ))}
 
-        {/* ── Global "no results" — shown only when every visible section is empty ── */}
-        {showGlobalNoResults && (
-          <EmptyData
-            icon={<Close />}
+              {/* ── Global "no results" — shown only when every visible section is empty ── */}
+              {showGlobalNoResults && (
+              <EmptyData
+            icon={<Close/>}
             title={t("search.noResults.title", "No results.")}
             message={t(
               "search.noResults.hint",
@@ -110,7 +108,7 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
             )}
           />
         )}
+          </div>
       </div>
-    </div>
   );
 };

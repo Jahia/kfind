@@ -127,6 +127,12 @@ function dispatchParent(action: unknown): void {
   }
 }
 
+/** Type-safe accessor for Jahia UI registry to avoid unsafe \`unknown\` casting. */
+function getRegistryEntry<T>(type: string, key: string): T | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (registry as any).get?.(type, key) as T;
+}
+
 function tryJContentGoto(payload: JContentGotoPayload): boolean {
   const store = getParentReduxStore();
   if (!store) {
@@ -134,11 +140,11 @@ function tryJContentGoto(payload: JContentGotoPayload): boolean {
   }
 
   try {
-    const entry = (
-      registry as unknown as {
-        get?: (type: string, key: string) => ReduxActionEntry;
-      }
-    ).get?.("redux-action", "jcontentGoto");
+    const entry = getRegistryEntry<ReduxActionEntry>(
+      "redux-action",
+      "jcontentGoto",
+    );
+
     if (!entry?.action) {
       return false;
     }
@@ -153,11 +159,7 @@ function tryJContentGoto(payload: JContentGotoPayload): boolean {
 
 function buildJContentRoutePath(payload: JContentGotoPayload): string | null {
   try {
-    const utils = (
-      registry as unknown as {
-        get?: (type: string, key: string) => JContentUtils;
-      }
-    ).get?.("jcontent", "utils");
+    const utils = getRegistryEntry<JContentUtils>("jcontent", "utils");
     if (!utils?.buildUrl) {
       return null;
     }
@@ -253,7 +255,9 @@ export function locateInJContent(nodePath: string, nodeType?: string): void {
 
   // Reuse jContent's own redux navigation action when available.
   const navigatedWithJContent = tryJContentGoto(gotoPayload);
-  if (!navigatedWithJContent) {
+  if (navigatedWithJContent) {
+    logNavigationInfo("navigation strategy", { strategy: "jcontentGoto" });
+  } else {
     // If jcontentGoto is unavailable, no alternative official jContent API was found.
     logNavigationInfo("navigation strategy", {
       strategy: "buildUrl-or-fallback",
@@ -277,8 +281,6 @@ export function locateInJContent(nodePath: string, nodeType?: string): void {
         `/jcontent/${site}/${language}/${mode}${encodedPath}`,
       );
     }
-  } else {
-    logNavigationInfo("navigation strategy", { strategy: "jcontentGoto" });
   }
 
   // Reuse jContent reducer action to force Page Builder mode.

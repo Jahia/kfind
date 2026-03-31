@@ -99,7 +99,7 @@ export const ResultsSection = ({
   const renderRows = useCallback(
     () =>
       visibleHits.map((hit) => (
-        <ResultCard
+          <ResultCard
           key={hit.id}
           title={hit.displayableName}
           type={hit.nodeType}
@@ -110,9 +110,7 @@ export const ResultsSection = ({
           scrollContainerRef={scrollContainerRef}
           inputWrapperRef={inputWrapperRef}
           onAction={() => onHitAction(hit)}
-          onSecondaryAction={
-            onSecondaryAction ? () => onSecondaryAction(hit) : undefined
-          }
+          onSecondaryAction={onSecondaryAction ? () => onSecondaryAction(hit) : undefined}
         />
       )),
     [
@@ -130,33 +128,33 @@ export const ResultsSection = ({
   }
 
   return (
-    <div ref={sectionRef} className={`${resultsLayout.section} ${s.section}`}>
-      <Typography variant="heading">{title}</Typography>
+      <div ref={sectionRef} className={`${resultsLayout.section} ${s.section}`}>
+          <Typography variant="heading">{title}</Typography>
 
-      {loading && hits.length === 0 && (
-        <Typography variant="body">
-          {t("search.loading", "Searching…")}
-        </Typography>
+          {loading && hits.length === 0 && (
+          <Typography variant="body">
+              {t("search.loading", "Searching…")}
+          </Typography>
       )}
 
-      {visibleHits.length > 0 && (
-        <ul className={resultsLayout.resultsList}>{renderRows()}</ul>
+          {visibleHits.length > 0 && (
+          <ul className={resultsLayout.resultsList}>{renderRows()}</ul>
       )}
 
-      {loading && hits.length > 0 && (
-        <Typography variant="caption">
-          {t("search.loadingMore", "Loading more…")}
-        </Typography>
+          {loading && hits.length > 0 && (
+          <Typography variant="caption">
+              {t("search.loadingMore", "Loading more…")}
+          </Typography>
       )}
 
-      {!loading && hasMoreToShow && hits.length > 0 && (
-        <Button
+          {!loading && hasMoreToShow && hits.length > 0 && (
+          <Button
           className={resultsLayout.showMoreButton}
           variant="ghost"
           label={t("search.showMore", "Show more")}
           onClick={handleShowMore}
         />
       )}
-    </div>
+      </div>
   );
 };

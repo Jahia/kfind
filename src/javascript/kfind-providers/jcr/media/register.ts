@@ -11,9 +11,7 @@ import {
 } from "../../../kfind/shared/configUtils.ts";
 import { JCR_MEDIA_BY_CRITERIA_QUERY } from "./query.ts";
 import { createJcrSearchProvider } from "../jcrSearchProvider.ts";
-
-const editNode = (hit: SearchHit) =>
-  window.parent.CE_API?.edit({ path: hit.path });
+import { openContentEditor } from "../../providerUtils.ts";
 
 const mediaProvider: KFindProvider = {
   priority: 20,
@@ -24,7 +22,7 @@ const mediaProvider: KFindProvider = {
   createSearchProvider: (client) =>
     createJcrSearchProvider(client, JCR_MEDIA_BY_CRITERIA_QUERY),
   locate: (hit: SearchHit) => locateInJContent(hit.path, hit.nodeType),
-  edit: editNode,
+  edit: openContentEditor,
 };
 
 registry.add("kfindProvider", "kfind-jcr-media", mediaProvider);

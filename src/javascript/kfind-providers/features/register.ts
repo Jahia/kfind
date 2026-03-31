@@ -37,14 +37,20 @@ type FeatureRegistryEntry = {
   targets?: Array<{ id: string }>;
 };
 
+function isFeatureRegistryEntry(entry: unknown): entry is FeatureRegistryEntry {
+  if (!entry || typeof entry !== "object") return false;
+  return "type" in entry && "key" in entry;
+}
+
 function getFeatureRegistryEntries(): FeatureRegistryEntry[] {
   const adminRoutes = registry.find({
     type: "adminRoute",
-  }) as unknown as FeatureRegistryEntry[];
+  });
   const jExperienceMenuEntries = registry.find({
     type: "jExperienceMenuEntry",
-  }) as unknown as FeatureRegistryEntry[];
-  return [...adminRoutes, ...jExperienceMenuEntries];
+  });
+  const combined = [...adminRoutes, ...jExperienceMenuEntries];
+  return combined.filter(isFeatureRegistryEntry);
 }
 
 function buildFeatureRoute(entry: FeatureRegistryEntry): string {

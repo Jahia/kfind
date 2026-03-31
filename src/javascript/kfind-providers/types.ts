@@ -112,16 +112,23 @@ export type KFindProvider = {
 };
 
 /**
+ * Type guard to safely check if a registry entry is a KFindProvider.
+ */
+function isKFindProvider(entry: unknown): entry is KFindProvider {
+  if (!entry || typeof entry !== "object") return false;
+  return "createSearchProvider" in entry && "locate" in entry;
+}
+
+/**
  * Reads all `kfindProvider` registrations from the Jahia UI registry,
  * sorted by ascending priority (lower values appear first in the UI).
  *
- * `registry.find()` returns `StoredService[]` which is a generic wrapper;
- * the cast to `KFindProvider[]` is safe because only kfindProvider
- * entries match the filter and they are all registered with the correct shape.
+ * `registry.find()` returns `StoredService[]` which is a generic wrapper.
+ * We use a type guard to filter and type safely.
  */
 export function getRegisteredProviders(): KFindProvider[] {
   const entries = registry.find({ type: "kfindProvider" });
-  return (entries as unknown as KFindProvider[]).sort(
-    (a, b) => a.priority - b.priority,
-  );
+  return entries
+    .filter(isKFindProvider)
+    .sort((a, b) => a.priority - b.priority);
 }

@@ -92,66 +92,67 @@ export const ResultCard = ({
   };
 
   return (
-    <li
+      <li
       data-kfind-result
       className={excerpt ? s.resultRow : s.resultRowCompact}
       tabIndex={tabIndex}
       onClick={onAction}
       onKeyDown={handleKeyDown}
-    >
-      <div className={s.resultRowContent}>
-        {thumbnailUrl && (
-          <img
+      >
+          <div className={s.resultRowContent}>
+              {thumbnailUrl && (
+              <img
             className={s.thumbnail}
             src={thumbnailUrl}
             alt=""
             loading="lazy"
           />
         )}
-        <div className={s.resultRowInfo}>
-          <Typography variant="subHeading">{displayTitle}</Typography>
-          <div className={s.resultRowMeta}>
-            <Chip color="accent" label={type} />
-            <Typography variant="caption">{path}</Typography>
-          </div>
-          {excerpt && (
-            <Typography variant="caption" className={s.resultRowExcerpt}>
-              {/* Excerpt is sanitized upstream before rendering. */}
-              {/* eslint-disable-next-line react/no-danger */}
-              <span dangerouslySetInnerHTML={{ __html: excerpt }} />
-            </Typography>
+              <div className={s.resultRowInfo}>
+                  <Typography variant="subHeading">{displayTitle}</Typography>
+                  <div className={s.resultRowMeta}>
+                      <Chip color="accent" label={type}/>
+                      <Typography variant="caption">{path}</Typography>
+                  </div>
+                  {excerpt && (
+                  <Typography variant="caption" className={s.resultRowExcerpt}>
+                      {/* TODO: Validated upstream, consider adding client-side serialization validation here */}
+                      {/* Excerpt is sanitized upstream before rendering. */}
+                      {/* eslint-disable-next-line react/no-danger */}
+                      <span dangerouslySetInnerHTML={{ __html: excerpt }}/>
+                  </Typography>
           )}
-        </div>
+              </div>
 
-        <div className={s.resultRowActions}>
-          <Tooltip label="Enter">
-            <Button
+              <div className={s.resultRowActions}>
+                  <Tooltip label="Enter">
+                      <Button
               size="big"
               variant="ghost"
-              icon={<Subdirectory width={24} height={24} />}
+              icon={<Subdirectory width={24} height={24}/>}
               tabIndex={-1}
               onClick={(e) => {
                 e.stopPropagation();
                 onAction();
               }}
             />
-          </Tooltip>
-          {onSecondaryAction && (
-            <Tooltip label={t("search.action.edit", "Edit")}>
-              <Button
+                  </Tooltip>
+                  {onSecondaryAction && (
+                  <Tooltip label={t("search.action.edit", "Edit")}>
+                      <Button
                 size="big"
                 variant="ghost"
-                icon={<Edit width={24} height={24} />}
+                icon={<Edit width={24} height={24}/>}
                 tabIndex={-1}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSecondaryAction();
                 }}
               />
-            </Tooltip>
+                  </Tooltip>
           )}
-        </div>
-      </div>
-    </li>
+              </div>
+          </div>
+      </li>
   );
 };
