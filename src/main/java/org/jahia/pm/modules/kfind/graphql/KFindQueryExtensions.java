@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
-import graphql.GraphQLException;
 
 /**
  * Extends the Jahia GraphQL Query type with a {@code urlReverseLookup} field.
@@ -100,7 +99,7 @@ public class KFindQueryExtensions {
             return results;
         } catch (RepositoryException e) {
             logger.debug("[urlReverseLookup] RepositoryException for url='{}': {}", url, e.getMessage(), e);
-            throw new GraphQLException("Error during URL reverse lookup: " + e.getMessage(), e);
+            throw new RuntimeException("Error during URL reverse lookup: " + e.getMessage(), e);
         }
     }
 
