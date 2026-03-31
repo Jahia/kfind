@@ -29,6 +29,7 @@ This guide covers the workflow and standards for contributing to kFind. For deep
 kFind currently has Cypress E2E tests under `tests/`. New features should be covered by E2E tests where practical. There are no unit tests today — do not assume a unit test framework is configured.
 
 To run tests locally:
+
 ```bash
 cd tests && yarn install
 ./deploy.sh dev          # build and deploy to a local Jahia instance
@@ -46,10 +47,10 @@ cd tests && yarn install
 
 This project includes on-demand AI skills (GitHub Copilot SKILL.md files) with deep guidance on Jahia-specific patterns. Load them when working in their respective domains:
 
-| Skill | When to load |
-|---|---|
-| [`moonstone-ui`](.github/skills/moonstone-ui/SKILL.md) | Building React UI components with `@jahia/moonstone` |
-| [`jahia-frontend`](.github/skills/jahia-frontend/SKILL.md) | Apollo client, registry pattern, CSS modules, `globals.d.ts` |
-| [`jahia-config`](.github/skills/jahia-config/SKILL.md) | Surfacing OSGi config to JavaScript via JSP + `contextJsParameters` |
-| [`jahia-graphql-frontend`](.github/skills/jahia-graphql-frontend/SKILL.md) | Writing GraphQL queries in TypeScript (JCR, augmented search) |
-| [`jahia-graphql-extension`](.github/skills/jahia-graphql-extension/SKILL.md) | Adding a new Java GraphQL field via `@GraphQLTypeExtension` |
+| Skill                                                                        | When to load                                                        |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [`moonstone-ui`](.github/skills/moonstone-ui/SKILL.md)                       | Building React UI components with `@jahia/moonstone`                |
+| [`jahia-frontend`](.github/skills/jahia-frontend/SKILL.md)                   | Apollo client, registry pattern, CSS modules, `globals.d.ts`        |
+| [`jahia-config`](.github/skills/jahia-config/SKILL.md)                       | Surfacing OSGi config to JavaScript via JSP + `contextJsParameters` |
+| [`jahia-graphql-frontend`](.github/skills/jahia-graphql-frontend/SKILL.md)   | Writing GraphQL queries in TypeScript (JCR, augmented search)       |
+| [`jahia-graphql-extension`](.github/skills/jahia-graphql-extension/SKILL.md) | Adding a new Java GraphQL field via `@GraphQLTypeExtension`         |
