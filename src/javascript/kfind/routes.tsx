@@ -3,7 +3,8 @@ import {registry} from '@jahia/ui-extender';
 import i18n from 'i18next';
 import {I18nextProvider} from 'react-i18next';
 import React from 'react';
-import {createRoot, Root} from 'react-dom/client';
+import {createRoot} from 'react-dom/client';
+import type {Root} from 'react-dom/client';
 import {KFindModal} from './KFindModal.tsx';
 
 const MODAL_CONTAINER_ID = 'kfind-search-modal';

@@ -14,7 +14,7 @@
  *      appears only when ALL sections are empty after a completed query.
  */
 import { useCallback, useRef, useState } from "react";
-import { Close, EmptyData, Search } from "@jahia/moonstone";
+import { Close, Search, Typography } from "@jahia/moonstone";
 import { useTranslation } from "react-i18next";
 import { KFindHeader } from "../KFindHeader/KFindHeader.tsx";
 import { useSearchOrchestration } from "../shared/useSearchOrchestration.ts";
@@ -68,11 +68,15 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
           <div ref={scrollContainerRef} className={styles.scrollContainer}>
               {/* ── Empty state ── */}
               {trimmedQuery.length < minChars && !hasAnyResults && (
-              <EmptyData
-            icon={<Search size="big"/>}
-            title={t("search.empty.title", "Find anything.")}
-            message={t("search.empty.hint", { min: minChars })}
-          />
+                <div className={s.emptyState}>
+                  <Search size="big" />
+                  <Typography variant="subheading" component="p">
+                    {t("search.empty.title", "Find anything.")}
+                  </Typography>
+                  <Typography variant="body" component="p">
+                    {t("search.empty.hint", { min: minChars })}
+                  </Typography>
+                </div>
         )}
 
               {/* ── Result sections — one per active provider ── */}
@@ -98,15 +102,19 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
 
               {/* ── Global "no results" — shown only when every visible section is empty ── */}
               {showGlobalNoResults && (
-              <EmptyData
-            icon={<Close/>}
-            title={t("search.noResults.title", "No results.")}
-            message={t(
-              "search.noResults.hint",
-              'Nothing matched "{{q}}". Try different keywords or check for typos.',
-              { q: trimmedQuery },
-            )}
-          />
+                <div className={s.emptyState}>
+                  <Close />
+                  <Typography variant="subheading" component="p">
+                    {t("search.noResults.title", "No results.")}
+                  </Typography>
+                  <Typography variant="body" component="p">
+                    {t(
+                      "search.noResults.hint",
+                      'Nothing matched "{{q}}". Try different keywords or check for typos.',
+                      { q: trimmedQuery },
+                    )}
+                  </Typography>
+                </div>
         )}
           </div>
       </div>

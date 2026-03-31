@@ -13,7 +13,8 @@
  * a MutationObserver patches its tabIndex to −1 so it doesn't interfere
  * with the arrow-key navigation flow.
  */
-import React, { FormEvent, useEffect } from "react";
+import React, { useEffect } from "react";
+import type { FormEvent } from "react";
 import { Input, Search, Typography } from "@jahia/moonstone";
 import { useTranslation } from "react-i18next";
 import { getSiteKey, getSearchLanguage } from "../shared/navigationUtils.ts";

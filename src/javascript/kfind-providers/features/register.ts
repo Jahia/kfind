@@ -38,8 +38,14 @@ type FeatureRegistryEntry = {
 };
 
 function isFeatureRegistryEntry(entry: unknown): entry is FeatureRegistryEntry {
-  if (!entry || typeof entry !== "object") return false;
-  return "type" in entry && "key" in entry;
+  if (!entry || typeof entry !== "object") {
+    return false;
+  }
+
+  const maybe = entry as Record<string, unknown>;
+  const hasAllowedType =
+    maybe.type === "adminRoute" || maybe.type === "jExperienceMenuEntry";
+  return hasAllowedType && typeof maybe.key === "string";
 }
 
 function getFeatureRegistryEntries(): FeatureRegistryEntry[] {
@@ -50,7 +56,15 @@ function getFeatureRegistryEntries(): FeatureRegistryEntry[] {
     type: "jExperienceMenuEntry",
   });
   const combined = [...adminRoutes, ...jExperienceMenuEntries];
-  return combined.filter(isFeatureRegistryEntry);
+
+  const entries: FeatureRegistryEntry[] = [];
+  for (const item of combined) {
+    if (isFeatureRegistryEntry(item)) {
+      entries.push(item);
+    }
+  }
+
+  return entries;
 }
 
 function buildFeatureRoute(entry: FeatureRegistryEntry): string {

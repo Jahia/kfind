@@ -115,8 +115,20 @@ export type KFindProvider = {
  * Type guard to safely check if a registry entry is a KFindProvider.
  */
 function isKFindProvider(entry: unknown): entry is KFindProvider {
-  if (!entry || typeof entry !== "object") return false;
-  return "createSearchProvider" in entry && "locate" in entry;
+  if (!entry || typeof entry !== "object") {
+    return false;
+  }
+
+  const maybe = entry as Record<string, unknown>;
+  return (
+    typeof maybe.priority === "number" &&
+    typeof maybe.title === "string" &&
+    typeof maybe.titleDefault === "string" &&
+    typeof maybe.isEnabled === "function" &&
+    typeof maybe.maxResults === "function" &&
+    typeof maybe.createSearchProvider === "function" &&
+    typeof maybe.locate === "function"
+  );
 }
 
 /**
@@ -128,7 +140,13 @@ function isKFindProvider(entry: unknown): entry is KFindProvider {
  */
 export function getRegisteredProviders(): KFindProvider[] {
   const entries = registry.find({ type: "kfindProvider" });
-  return entries
-    .filter(isKFindProvider)
-    .sort((a, b) => a.priority - b.priority);
+
+  const providers: KFindProvider[] = [];
+  for (const entry of entries) {
+    if (isKFindProvider(entry)) {
+      providers.push(entry);
+    }
+  }
+
+  return providers.sort((a, b) => a.priority - b.priority);
 }
