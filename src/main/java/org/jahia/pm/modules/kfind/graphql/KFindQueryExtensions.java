@@ -22,8 +22,10 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import graphql.GraphQLException;
 
 /**
  * Extends the Jahia GraphQL Query type with a {@code urlReverseLookup} field.
@@ -60,6 +62,12 @@ public class KFindQueryExtensions {
             @GraphQLNonNull @GraphQLName("siteKey") @GraphQLDescription("The Jahia site key") String siteKey) {
         logger.debug("[urlReverseLookup] START — url='{}' siteKey='{}'", url, siteKey);
 
+        // Prevent DoS through extremely long input URLs
+        if (url != null && url.length() > 2000) {
+            logger.debug("[urlReverseLookup] Rejected — url exceeds maximum length of 2000 characters");
+            throw new IllegalArgumentException("URL exceeds maximum allowed length of 2000 characters");
+        }
+
         if (!SITE_KEY_PATTERN.matcher(siteKey).matches()) {
             logger.debug("[urlReverseLookup] Rejected — siteKey '{}' fails validation pattern", siteKey);
             throw new IllegalArgumentException("Invalid site key: " + siteKey);
@@ -77,13 +85,13 @@ public class KFindQueryExtensions {
             Set<String> seenPaths = new LinkedHashSet<>();
 
             for (String candidate : buildServiceCandidates(path, siteKey)) {
-                GqlJcrNode resolved = resolveWithUrlResolver(candidate, siteKey, workspace);
-                if (resolved != null) {
-                    String nodePath = resolved.getPath();
+                Optional<GqlJcrNode> resolved = resolveWithUrlResolver(candidate, siteKey, workspace);
+                if (resolved.isPresent()) {
+                    String nodePath = resolved.get().getPath();
                     if (seenPaths.add(nodePath)) {
                         logger.debug("[urlReverseLookup] Resolved via URLResolver at candidate='{}' → node='{}'",
                                 candidate, nodePath);
-                        results.add(resolved);
+                        results.add(resolved.get());
                     }
                 }
             }
@@ -92,7 +100,7 @@ public class KFindQueryExtensions {
             return results;
         } catch (RepositoryException e) {
             logger.debug("[urlReverseLookup] RepositoryException for url='{}': {}", url, e.getMessage(), e);
-            throw new RuntimeException("Error during URL reverse lookup: " + e.getMessage(), e);
+            throw new GraphQLException("Error during URL reverse lookup: " + e.getMessage(), e);
         }
     }
 
@@ -131,6 +139,19 @@ public class KFindQueryExtensions {
         return result;
     }
 
+    /**
+     * Builds candidate JCR paths for URL resolution.
+     * <p>
+     * Tries three strategies in order:
+     * 1. Raw path as-is (e.g. standard JCR paths)
+     * 2. /sites/{siteKey}/path (e.g. direct vanity URLs)
+     * 3. /sites/{siteKey}/home/path (common Jahia structure)
+     *
+     * @param rawPath The extracted path from the URL
+     * @param siteKey The targeted site key
+     * @return Set of normalized JCR path candidates, preserving insertion order
+     *         (deduplicated)
+     */
     private static Set<String> buildServiceCandidates(String rawPath, String siteKey) {
         String siteRoot = "/sites/" + siteKey;
         List<String> generatedCandidates = new ArrayList<>();
@@ -167,13 +188,23 @@ public class KFindQueryExtensions {
         return normalized;
     }
 
-    private static GqlJcrNode resolveWithUrlResolver(String path, String siteKey, String workspace) {
+    /**
+     * Resolves a candidate path against the JCR using the Jahia URLResolver.
+     * Note: OSGi service lookups here are thread-safe and dynamic.
+     *
+     * @param path      The candidate JCR path to resolve
+     * @param siteKey   The current site key context
+     * @param workspace The target JCR workspace (e.g., 'default' or 'live')
+     * @return Optional containing the resolved GqlJcrNode, or empty if resolution
+     *         fails/node is not found
+     */
+    private static Optional<GqlJcrNode> resolveWithUrlResolver(String path, String siteKey, String workspace) {
         logger.debug("[resolveWithUrlResolver] path='{}' siteKey='{}' workspace='{}'", path, siteKey, workspace);
 
         URLResolverFactory urlResolverFactory = BundleUtils.getOsgiService(URLResolverFactory.class, null);
         if (urlResolverFactory == null) {
             logger.debug("[resolveWithUrlResolver] URLResolverFactory OSGi service unavailable");
-            return null;
+            return Optional.empty();
         }
 
         try {
@@ -183,7 +214,7 @@ public class KFindQueryExtensions {
             if (node != null) {
                 logger.debug("[resolveWithUrlResolver] resolved node — path='{}' type='{}'",
                         node.getPath(), node.getPrimaryNodeType().getName());
-                return new GqlJcrNodeImpl(node);
+                return Optional.of(new GqlJcrNodeImpl(node));
             }
         } catch (RepositoryException e) {
             logger.debug("[resolveWithUrlResolver] RepositoryException while resolving path='{}'", path, e);
@@ -191,7 +222,7 @@ public class KFindQueryExtensions {
             logger.debug("[resolveWithUrlResolver] RuntimeException while resolving path='{}'", path, e);
         }
 
-        logger.debug("[resolveWithUrlResolver] returning null for path='{}'", path);
-        return null;
+        logger.debug("[resolveWithUrlResolver] returning empty for path='{}'", path);
+        return Optional.empty();
     }
 }
