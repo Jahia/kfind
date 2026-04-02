@@ -54,7 +54,7 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
   const handleSearchClear = useCallback(() => setSearchValue(""), []);
 
   return (
-      <div className={s.panel}>
+      <div className={s.panel} data-kfind-panel="true">
           <KFindHeader
         searchValue={searchValue}
         focusOnField={focusOnField}
@@ -65,10 +65,14 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
         onTriggerSearch={triggerSearch}
       />
 
-          <div ref={scrollContainerRef} className={styles.scrollContainer}>
+          <div
+          ref={scrollContainerRef}
+          className={styles.scrollContainer}
+          data-kfind-scroll-container="true"
+          >
               {/* ── Empty state ── */}
               {trimmedQuery.length < minChars && !hasAnyResults && (
-                <div className={s.emptyState}>
+                <div className={s.emptyState} data-kfind-empty-state="hint">
                   <Search size="big" />
                   <Typography variant="subheading" component="p">
                     {t("search.empty.title", "Find anything.")}
@@ -83,6 +87,7 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
               {providers.map(({ key, registration, state, loadNextPage }) => (
                   <ResultsSection
             key={key}
+                sectionKey={key}
             title={t(registration.title, registration.titleDefault)}
             hits={state.allHits}
             loading={state.loading}
@@ -102,7 +107,7 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
 
               {/* ── Global "no results" — shown only when every visible section is empty ── */}
               {showGlobalNoResults && (
-                <div className={s.emptyState}>
+                <div className={s.emptyState} data-kfind-empty-state="no-results">
                   <Close />
                   <Typography variant="subheading" component="p">
                     {t("search.noResults.title", "No results.")}

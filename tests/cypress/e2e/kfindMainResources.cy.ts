@@ -46,31 +46,31 @@ describe('kFind main resources provider', () => {
     it('finds a main resource created via GraphQL', () => {
         searchInModal(exactTitle);
 
-        cy.get('.search-modal').contains(/Main Resource/i, {timeout: 10000});
-        cy.get('.search-modal').contains(exactTitle, {timeout: 20000});
+        cy.get('[data-kfind-panel="true"]').contains(/Main Resource/i, {timeout: 10000});
+        cy.get('[data-kfind-panel="true"]').contains(exactTitle, {timeout: 20000});
     });
 
     it('filters main resource results by query term', () => {
         searchInModal(`exact ${token}`);
 
-        cy.get('.search-modal').contains(/Main Resource/i, {timeout: 10000});
-        cy.get('.search-modal').contains(exactTitle, {timeout: 20000});
-        cy.get('.search-modal').should('not.contain', broaderTitle);
+        cy.get('[data-kfind-panel="true"]').contains(/Main Resource/i, {timeout: 10000});
+        cy.get('[data-kfind-panel="true"]').contains(exactTitle, {timeout: 20000});
+        cy.get('[data-kfind-panel="true"]').should('not.contain', broaderTitle);
     });
 
     it('shows more main resource results after clicking Show more', () => {
         searchInModal(`kfind main resource bulk ${token}`);
 
-        cy.get('.search-modal').contains(/Main Resource/i, {timeout: 10000});
-        cy.get('[data-kfind-result][tabindex]', {timeout: 20000})
+        cy.get('[data-kfind-panel="true"]').contains(/Main Resource/i, {timeout: 10000});
+        cy.get('[data-kfind-result-row="true"][tabindex]', {timeout: 20000})
             .its('length')
             .then(initialCount => {
                 const countBefore = Number(initialCount);
                 expect(countBefore).to.be.greaterThan(0);
 
-                cy.get('.search-modal button').contains(/^Show more$/i, {timeout: 20000}).click();
+            cy.get('[data-kfind-show-more="true"]', {timeout: 20000}).first().click();
 
-                cy.get('[data-kfind-result][tabindex]', {timeout: 20000})
+            cy.get('[data-kfind-result-row="true"][tabindex]', {timeout: 20000})
                     .its('length')
                     .should('be.greaterThan', countBefore);
             });

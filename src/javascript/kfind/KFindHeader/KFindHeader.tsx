@@ -80,8 +80,8 @@ export const KFindHeader = ({
           })}
               </Typography>
           </div>
-          <div ref={inputWrapperRef}>
-              <form role="search" onSubmit={handleSubmit}>
+            <div ref={inputWrapperRef} data-kfind-search-input-wrapper="true">
+              <form role="search" onSubmit={handleSubmit} data-kfind-search-form="true">
                   <Input
             size="big"
             type="search"
@@ -94,7 +94,9 @@ export const KFindHeader = ({
               if (e.key === "ArrowDown") {
                 e.preventDefault();
                 scrollContainerRef.current
-                  ?.querySelector<HTMLElement>("[data-kfind-result][tabindex]")
+                  ?.querySelector<HTMLElement>(
+                    '[data-kfind-result-row="true"][tabindex]',
+                  )
                   ?.focus();
               }
             }}

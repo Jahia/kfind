@@ -87,6 +87,7 @@ export const KFindModal = () => {
         isOpen={isOpen}
         size="full"
         className="search-modal"
+        data-kfind-modal="true"
         style={{ width: "800px" }}
         onOpenChange={setIsOpen}
           >

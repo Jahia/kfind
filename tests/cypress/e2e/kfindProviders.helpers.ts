@@ -81,14 +81,66 @@ const getNodeByPath = (path: string) => gqlRequest({query: GET_NODE_BY_PATH_QUER
 // ---------------------------------------------------------------------------
 
 export const openSearchModal = () => {
-    cy.contains('.moonstone-primaryNavItem', 'Search').click();
-    cy.get('.search-modal', {timeout: 10000}).should('be.visible');
-    cy.get('.search-modal input[type="search"]', {timeout: 10000}).as('searchInput').should('be.visible');
+    const panelSelector = '[data-kfind-panel="true"]';
+
+    cy.get('body').then($body => {
+        const panelExists = $body.find(`${panelSelector}:visible`).length > 0;
+        if (panelExists) {
+            return;
+        }
+
+        cy.window().then(win => {
+            const dispatchOpenEvent = (target: Window) => {
+                target.dispatchEvent(new CustomEvent('kfind:open-search'));
+            };
+
+            const dispatchOpenShortcut = (targetWindow: Window) => {
+                const evt = new targetWindow.KeyboardEvent('keydown', {
+                    key: 'k',
+                    ctrlKey: true,
+                    bubbles: true
+                });
+
+                targetWindow.document.dispatchEvent(evt);
+            };
+
+            dispatchOpenEvent(win);
+            dispatchOpenShortcut(win);
+
+            try {
+                if (win.parent && win.parent !== win) {
+                    dispatchOpenEvent(win.parent);
+                    dispatchOpenShortcut(win.parent);
+                }
+            } catch {
+                // Ignore cross-context parent access issues.
+            }
+        });
+    });
+
+    cy.get('body').then($body => {
+        const panelExists = $body.find(`${panelSelector}:visible`).length > 0;
+        if (panelExists) {
+            return;
+        }
+
+        // Fallback for environments where the custom event does not reach the modal host.
+        cy.get('body').type('{ctrl}k');
+    });
+
+    cy.get(panelSelector, {timeout: 10000}).should('be.visible');
+    cy.get('[data-kfind-search-input-wrapper="true"] input[type="search"]', {timeout: 10000}).as('searchInput').should('be.visible');
 };
 
 export const closeSearchModal = () => {
     cy.get('body').type('{esc}');
-    cy.get('.search-modal').should('not.exist');
+    cy.get('body').then($body => {
+        if ($body.find('[data-kfind-panel="true"]').length === 0) {
+            return;
+        }
+
+        cy.get('[data-kfind-panel="true"]').should('not.be.visible');
+    });
 };
 
 export const searchInModal = (query: string) => {

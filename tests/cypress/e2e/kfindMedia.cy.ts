@@ -37,14 +37,14 @@ describe('kFind media provider', () => {
     it('finds a media node created via GraphQL', () => {
         searchInModal(exactFile);
 
-        cy.get('.search-modal').contains('Media', {timeout: 10000});
-        cy.get('.search-modal').contains(exactFile, {timeout: 20000});
+        cy.get('[data-kfind-panel="true"]').contains('Media', {timeout: 10000});
+        cy.get('[data-kfind-panel="true"]').contains(exactFile, {timeout: 20000});
     });
 
     it('filters media results by query term', () => {
         searchInModal(`exact-${token}`);
 
-        cy.get('.search-modal').contains(exactFile, {timeout: 20000});
-        cy.get('.search-modal').should('not.contain', broaderFile);
+        cy.get('[data-kfind-panel="true"]').contains(exactFile, {timeout: 20000});
+        cy.get('[data-kfind-panel="true"]').should('not.contain', broaderFile);
     });
 });

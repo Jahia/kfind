@@ -36,38 +36,38 @@ describe('kFind edge cases and shortcuts', () => {
     it('shows global no-results state for an unknown query', () => {
         searchInModal('kfind-edge-no-match-xyz');
 
-        cy.get('.search-modal').contains('No results', {timeout: 10000});
+        cy.get('[data-kfind-panel="true"]').contains('No results', {timeout: 10000});
     });
 
     it('keeps the modal responsive for special-character queries', () => {
         const specialQuery = '"/sites/test?x=1&y=2"';
         searchInModal(specialQuery);
 
-        cy.get('.search-modal', {timeout: 10000}).should('be.visible');
+        cy.get('[data-kfind-panel="true"]', {timeout: 10000}).should('be.visible');
         cy.get('@searchInput').should('have.value', specialQuery);
     });
 
     it('matches page results with case-insensitive query', () => {
         searchInModal(pageTitle.toUpperCase());
 
-        cy.get('.search-modal').contains('Pages', {timeout: 10000});
-        cy.get('.search-modal').contains(pageTitle, {timeout: 20000});
+        cy.get('[data-kfind-panel="true"]').contains('Pages', {timeout: 10000});
+        cy.get('[data-kfind-panel="true"]').contains(pageTitle, {timeout: 20000});
     });
 
     it('closes the modal when pressing Escape', () => {
         openSearchModal();
 
         cy.get('body').type('{esc}');
-        cy.get('.search-modal').should('not.exist');
+        cy.get('[data-kfind-panel="true"]').should('not.exist');
     });
 
     it('toggles modal visibility with Ctrl+K', () => {
         openSearchModal();
 
         cy.get('body').type('{ctrl}k');
-        cy.get('.search-modal').should('not.exist');
+        cy.get('[data-kfind-panel="true"]').should('not.exist');
 
         cy.get('body').type('{ctrl}k');
-        cy.get('.search-modal', {timeout: 10000}).should('be.visible');
+        cy.get('[data-kfind-panel="true"]', {timeout: 10000}).should('be.visible');
     });
 });

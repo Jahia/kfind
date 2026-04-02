@@ -37,14 +37,14 @@ describe('kFind pages provider', () => {
     it('finds a page created via GraphQL', () => {
         searchInModal(exactTitle);
 
-        cy.get('.search-modal').contains('Pages', {timeout: 10000});
-        cy.get('.search-modal').contains(exactTitle, {timeout: 20000});
+        cy.get('[data-kfind-panel="true"]').contains('Pages', {timeout: 10000});
+        cy.get('[data-kfind-panel="true"]').contains(exactTitle, {timeout: 20000});
     });
 
     it('filters page results by query term', () => {
         searchInModal(`exact ${token}`);
 
-        cy.get('.search-modal').contains(exactTitle, {timeout: 20000});
-        cy.get('.search-modal').should('not.contain', broaderTitle);
+        cy.get('[data-kfind-panel="true"]').contains(exactTitle, {timeout: 20000});
+        cy.get('[data-kfind-panel="true"]').should('not.contain', broaderTitle);
     });
 });

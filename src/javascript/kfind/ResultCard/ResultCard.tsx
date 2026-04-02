@@ -78,7 +78,7 @@ export const ResultCard = ({
       e.preventDefault();
       const rows = Array.from(
         scrollContainerRef.current?.querySelectorAll<HTMLElement>(
-          "[data-kfind-result][tabindex]",
+          '[data-kfind-result-row="true"][tabindex]',
         ) ?? [],
       );
       const idx = rows.indexOf(e.currentTarget as HTMLElement);
@@ -94,6 +94,7 @@ export const ResultCard = ({
   return (
       <li
       data-kfind-result
+      data-kfind-result-row="true"
       className={excerpt ? s.resultRow : s.resultRowCompact}
       tabIndex={tabIndex}
       onClick={onAction}

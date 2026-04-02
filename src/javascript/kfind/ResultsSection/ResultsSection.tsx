@@ -27,6 +27,7 @@ import resultsLayout from "../shared/resultsTableLayout.module.css";
 import s from "./ResultsSection.module.css";
 
 type ResultsSectionProps = {
+  readonly sectionKey: string;
   readonly title: string;
   readonly hits: SearchHit[];
   readonly loading: boolean;
@@ -41,6 +42,7 @@ type ResultsSectionProps = {
 };
 
 export const ResultsSection = ({
+  sectionKey,
   title,
   hits,
   loading,
@@ -87,7 +89,7 @@ export const ResultsSection = ({
 
     const items =
       sectionRef.current?.querySelectorAll<HTMLElement>(
-        "[data-kfind-result][tabindex]",
+        '[data-kfind-result-row="true"][tabindex]',
       ) ?? [];
     const firstNew = items[prevLength];
     if (firstNew) {
@@ -128,7 +130,11 @@ export const ResultsSection = ({
   }
 
   return (
-      <div ref={sectionRef} className={`${resultsLayout.section} ${s.section}`}>
+      <div
+      ref={sectionRef}
+      className={`${resultsLayout.section} ${s.section}`}
+      data-kfind-results-section={sectionKey}
+      >
           <Typography variant="heading">{title}</Typography>
 
           {loading && hits.length === 0 && (
@@ -152,6 +158,7 @@ export const ResultsSection = ({
           className={resultsLayout.showMoreButton}
           variant="ghost"
           label={t("search.showMore", "Show more")}
+          data-kfind-show-more="true"
           onClick={handleShowMore}
         />
       )}

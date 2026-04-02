@@ -26,14 +26,14 @@ describe('kFind features provider', () => {
     it('returns feature results for page models query', () => {
         searchInModal('page models');
 
-        cy.get('.search-modal').contains('Features', {timeout: 10000});
-        cy.get('.search-modal').contains(/page\s*models/i, {timeout: 10000});
+        cy.get('[data-kfind-panel="true"]').contains('Features', {timeout: 10000});
+        cy.get('[data-kfind-panel="true"]').contains(/page\s*models/i, {timeout: 10000});
     });
 
     it('does not return feature results for unknown query', () => {
         searchInModal('kfind-feature-no-match-xyz');
 
-        cy.get('.search-modal').contains('No results found', {timeout: 10000});
-        cy.get('.search-modal').should('not.contain', 'Features');
+        cy.get('[data-kfind-empty-state="no-results"]', {timeout: 10000}).should('be.visible');
+        cy.get('[data-kfind-panel="true"]').should('not.contain', 'Features');
     });
 });

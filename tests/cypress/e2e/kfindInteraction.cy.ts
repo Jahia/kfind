@@ -36,7 +36,7 @@ describe('kFind keyboard interaction', () => {
         searchInModal(`kfind nav ${token}`);
 
         cy.get('@searchInput').type('{downarrow}');
-        cy.focused().should('have.attr', 'data-kfind-result');
+        cy.focused().should('have.attr', 'data-kfind-result-row', 'true');
     });
 
     it('navigates between result rows with ArrowDown and ArrowUp', () => {

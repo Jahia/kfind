@@ -40,22 +40,22 @@ describe('kFind pagination behavior', () => {
     it('shows a Show more button when a section has additional results', () => {
         searchInModal(`kfind pagination ${token}`);
 
-        cy.get('.search-modal').contains('Pages', {timeout: 10000});
-        cy.get('.search-modal button').contains(/^Show more$/i, {timeout: 20000}).should('be.visible');
+        cy.get('[data-kfind-panel="true"]').contains('Pages', {timeout: 10000});
+        cy.get('[data-kfind-show-more="true"]', {timeout: 20000}).first().should('be.visible');
     });
 
     it('loads more results after clicking Show more', () => {
         searchInModal(`kfind pagination ${token}`);
 
-        cy.get('[data-kfind-result][tabindex]', {timeout: 20000})
+        cy.get('[data-kfind-result-row="true"][tabindex]', {timeout: 20000})
             .its('length')
             .then(initialCount => {
                 const countBefore = Number(initialCount);
                 expect(countBefore).to.be.greaterThan(0);
 
-                cy.get('.search-modal button').contains(/^Show more$/i, {timeout: 20000}).click();
+            cy.get('[data-kfind-show-more="true"]', {timeout: 20000}).first().click();
 
-                cy.get('[data-kfind-result][tabindex]', {timeout: 20000})
+            cy.get('[data-kfind-result-row="true"][tabindex]', {timeout: 20000})
                     .its('length')
                     .should('be.greaterThan', countBefore);
             });
