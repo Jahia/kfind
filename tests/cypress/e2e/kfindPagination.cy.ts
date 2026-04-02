@@ -1,18 +1,14 @@
-import {enableModule, createSite, deleteSite} from '@jahia/cypress';
 import {
     closeSearchModal,
     createPageViaGraphql,
-    searchInModal
+    searchInModal,
+    SITE_KEY
 } from './kfindProviders.helpers';
 
 describe('kFind pagination behavior', () => {
-    const SITE_KEY = 'kfind-pagination-site';
     const token = Date.now().toString();
 
-    before('Create test site, enable module and seed many pages', () => {
-        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
-        enableModule('kfind', SITE_KEY);
-
+    before('Seed many pages', () => {
         cy.login();
         cy.wrap([...Array(8).keys()]).each(index => {
             createPageViaGraphql(
@@ -31,10 +27,6 @@ describe('kFind pagination behavior', () => {
 
     afterEach(() => {
         closeSearchModal();
-    });
-
-    after('Delete test site', () => {
-        deleteSite(SITE_KEY);
     });
 
     it('shows a Show more button when a section has additional results', () => {

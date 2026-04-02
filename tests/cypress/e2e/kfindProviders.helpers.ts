@@ -77,6 +77,12 @@ const addNode = (variables: {
 const getNodeByPath = (path: string) => gqlRequest({query: GET_NODE_BY_PATH_QUERY, variables: {path}});
 
 // ---------------------------------------------------------------------------
+// Shared test site key
+// ---------------------------------------------------------------------------
+
+export const SITE_KEY = 'kfind-test-site';
+
+// ---------------------------------------------------------------------------
 // Modal interaction helpers
 // ---------------------------------------------------------------------------
 

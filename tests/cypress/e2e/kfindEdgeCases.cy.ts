@@ -1,20 +1,16 @@
-import {enableModule, createSite, deleteSite} from '@jahia/cypress';
 import {
     closeSearchModal,
     createPageViaGraphql,
     openSearchModal,
-    searchInModal
+    searchInModal,
+    SITE_KEY
 } from './kfindProviders.helpers';
 
 describe('kFind edge cases and shortcuts', () => {
-    const SITE_KEY = 'kfind-edge-site';
     const token = Date.now().toString();
     const pageTitle = `kfind edge title ${token}`;
 
-    before('Create test site, enable module and seed content', () => {
-        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
-        enableModule('kfind', SITE_KEY);
-
+    before('Seed content', () => {
         cy.login();
         createPageViaGraphql(SITE_KEY, `kfind-edge-page-${token}`, pageTitle);
     });
@@ -27,10 +23,6 @@ describe('kFind edge cases and shortcuts', () => {
 
     afterEach(() => {
         closeSearchModal();
-    });
-
-    after('Delete test site', () => {
-        deleteSite(SITE_KEY);
     });
 
     it('shows global no-results state for an unknown query', () => {

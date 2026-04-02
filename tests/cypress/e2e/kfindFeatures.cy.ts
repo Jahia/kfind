@@ -1,14 +1,6 @@
-import {enableModule, createSite, deleteSite} from '@jahia/cypress';
-import {closeSearchModal, searchInModal} from './kfindProviders.helpers';
+import {closeSearchModal, searchInModal, SITE_KEY} from './kfindProviders.helpers';
 
 describe('kFind features provider', () => {
-    const SITE_KEY = 'kfind-features-site';
-
-    before('Create test site and enable kfind', () => {
-        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
-        enableModule('kfind', SITE_KEY);
-    });
-
     beforeEach(() => {
         cy.login();
         cy.visit(`/jahia/jcontent/${SITE_KEY}/en/pages`);
@@ -17,10 +9,6 @@ describe('kFind features provider', () => {
 
     afterEach(() => {
         closeSearchModal();
-    });
-
-    after('Delete test site', () => {
-        deleteSite(SITE_KEY);
     });
 
     it('returns feature results for page models query', () => {
