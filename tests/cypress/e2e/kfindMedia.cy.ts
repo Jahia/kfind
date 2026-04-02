@@ -12,7 +12,7 @@ describe('kFind media provider', () => {
     const broaderFile = `kfind-media-broader-${token}.txt`;
 
     before('Create test site, enable module and seed media content via GraphQL', () => {
-        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'dx-base-demo-templates'});
+        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
         enableModule('kfind', SITE_KEY);
 
         cy.login();
@@ -31,7 +31,7 @@ describe('kFind media provider', () => {
     });
 
     after('Delete test site', () => {
-        deleteSite(SITE_KEY);
+        // deleteSite(SITE_KEY); // commented out to inspect server state after run
     });
 
     it('finds a media node created via GraphQL', () => {

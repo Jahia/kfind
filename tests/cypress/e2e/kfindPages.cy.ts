@@ -12,7 +12,7 @@ describe('kFind pages provider', () => {
     const broaderTitle = `kfind pages broader ${token}`;
 
     before('Create test site, enable module and seed page content via GraphQL', () => {
-        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'dx-base-demo-templates'});
+        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
         enableModule('kfind', SITE_KEY);
 
         cy.login();

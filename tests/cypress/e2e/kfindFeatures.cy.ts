@@ -5,7 +5,7 @@ describe('kFind features provider', () => {
     const SITE_KEY = 'kfind-features-site';
 
     before('Create test site and enable kfind', () => {
-        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'dx-base-demo-templates'});
+        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
         enableModule('kfind', SITE_KEY);
     });
 

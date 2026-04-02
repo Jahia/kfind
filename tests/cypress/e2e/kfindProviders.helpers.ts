@@ -1,56 +1,89 @@
-import gql from 'graphql-tag';
+// ---------------------------------------------------------------------------
+// GraphQL mutations / queries
+//
+// All requests go through gqlRequest() which uses cy.request() with an explicit
+// Origin header. cy.apollo() / cross-fetch cannot set Origin, so Jahia's CSRF
+// filter blocks those calls with HTTP 200 + "Permission denied".
+// ---------------------------------------------------------------------------
 
-type CreateNodeResult = {
+const ADD_NODE_MUTATION = `
+mutation addNode($parentPathOrId: String!, $name: String!, $primaryNodeType: String!, $properties: [InputJCRProperty], $mixins: [String]) {
+    jcr(workspace: EDIT) {
+        addNode(parentPathOrId: $parentPathOrId, name: $name, primaryNodeType: $primaryNodeType, properties: $properties, mixins: $mixins) {
+            uuid
+        }
+    }
+}`;
+
+// jnt:file requires a mandatory jcr:content child (jnt:resource) with both
+// jcr:mimeType and jcr:data. The $file variable is the form-field key name;
+// Jahia resolves the binary from that field in the multipart body.
+const UPLOAD_FILE_MUTATION = `
+mutation upload($file: String!, $parentPathOrId: String!, $name: String!) {
+    jcr {
+        addNode(parentPathOrId: $parentPathOrId, name: $name, primaryNodeType: "jnt:file") {
+            addChild(name: "jcr:content", primaryNodeType: "jnt:resource") {
+                c: mutateProperty(name: "jcr:data") { setValue(type: BINARY, value: $file) }
+                m: mutateProperty(name: "jcr:mimeType") { setValue(value: "text/plain") }
+            }
+            uuid
+        }
+    }
+}`;
+
+const GET_NODE_BY_PATH_QUERY = `
+query getNodeByPath($path: String!) {
+    jcr(workspace: EDIT) {
+        nodeByPath(path: $path) {
+            uuid
+        }
+    }
+}`;
+
+// ---------------------------------------------------------------------------
+// Low-level helpers
+// ---------------------------------------------------------------------------
+
+type GraphQLResult = {
     data?: {
         jcr?: {
-            addNode?: {
-                path?: string;
-            };
-            nodesByPath?: Array<{path: string; name: string; uuid: string}>;
-        };
-    };
+            addNode?: { uuid?: string } | null;
+            nodeByPath?: { uuid?: string } | null;
+        } | null;
+    } | null;
     errors?: unknown;
 };
 
-const CREATE_NODE_MUTATION = gql`
-    mutation CreateNode(
-        $parentPathOrId: String!
-        $name: String!
-        $primaryNodeType: String!
-        $properties: [InputJCRProperty]
-    ) {
-        jcr(workspace: EDIT) {
-            addNode(
-                parentPathOrId: $parentPathOrId
-                name: $name
-                primaryNodeType: $primaryNodeType
-                useAvailableNodeName: true
-                properties: $properties
-            ) {
-                path
-                name
-                uuid
-            }
-        }
-    }
-`;
+const gqlRequest = (body: Record<string, unknown>): Cypress.Chainable<GraphQLResult> =>
+    cy.request({
+        method: 'POST',
+        url: '/modules/graphql',
+        headers: {
+            'Content-Type': 'application/json',
+            'Origin': Cypress.config('baseUrl')
+        },
+        auth: {user: 'root', pass: Cypress.env('SUPER_USER_PASSWORD')},
+        body
+    }).then(response => response.body as GraphQLResult);
 
-const NODES_BY_PATH_QUERY = gql`
-    query NodesByPath($path: String!) {
-        jcr(workspace: EDIT) {
-            nodesByPath(paths: [$path]) {
-                path
-                name
-                uuid
-            }
-        }
-    }
-`;
+const addNode = (variables: {
+    parentPathOrId: string;
+    name: string;
+    primaryNodeType: string;
+    properties?: Array<{name: string; language?: string; value: string}>;
+    mixins?: string[];
+}) => gqlRequest({query: ADD_NODE_MUTATION, variables});
+
+const getNodeByPath = (path: string) => gqlRequest({query: GET_NODE_BY_PATH_QUERY, variables: {path}});
+
+// ---------------------------------------------------------------------------
+// Modal interaction helpers
+// ---------------------------------------------------------------------------
 
 export const openSearchModal = () => {
-    cy.get('body').type('{ctrl}k');
+    cy.contains('.moonstone-primaryNavItem', 'Search').click();
     cy.get('.search-modal', {timeout: 10000}).should('be.visible');
-    cy.get('.search-modal input[type="text"]', {timeout: 10000}).as('searchInput').should('be.visible');
+    cy.get('.search-modal input[type="search"]', {timeout: 10000}).as('searchInput').should('be.visible');
 };
 
 export const closeSearchModal = () => {
@@ -64,10 +97,34 @@ export const searchInModal = (query: string) => {
     cy.get('@searchInput').type(query);
 };
 
-export const createPageViaGraphql = (siteKey: string, pageName: string, pageTitle: string) =>
-    cy.apollo({
-        mutation: CREATE_NODE_MUTATION,
-        variables: {
+// ---------------------------------------------------------------------------
+// Content creation helpers
+// ---------------------------------------------------------------------------
+
+// jnt:page requires j:templateName (mandatory constraint). The ensureHomePage
+// guard creates /home if createSite's template import hasn't done it yet.
+export const createPageViaGraphql = (siteKey: string, pageName: string, pageTitle: string) => {
+    const ensureHomePage = () =>
+        getNodeByPath(`/sites/${siteKey}/home`).then((result: GraphQLResult) => {
+            if (result?.data?.jcr?.nodeByPath?.uuid) {
+                return;
+            }
+
+            return addNode({
+                parentPathOrId: `/sites/${siteKey}`,
+                name: 'home',
+                primaryNodeType: 'jnt:page',
+                properties: [
+                    {name: 'jcr:title', language: 'en', value: 'Home'},
+                    {name: 'j:templateName', value: 'base'}
+                ]
+            }).then((createResult: GraphQLResult) => {
+                expect(createResult.errors, 'GraphQL errors while creating home page').to.be.undefined;
+            });
+        });
+
+    return ensureHomePage().then(() =>
+        addNode({
             parentPathOrId: `/sites/${siteKey}/home`,
             name: pageName,
             primaryNodeType: 'jnt:page',
@@ -76,59 +133,122 @@ export const createPageViaGraphql = (siteKey: string, pageName: string, pageTitl
                     name: 'jcr:title',
                     language: 'en',
                     value: pageTitle
+                },
+                {
+                    name: 'j:templateName',
+                    value: 'base'
                 }
             ]
-        }
-    }).then((result: CreateNodeResult) => {
-        expect(result.errors, 'GraphQL errors while creating page').to.be.undefined;
-        expect(result?.data?.jcr?.addNode?.path, 'created page path').to.be.a('string');
-        return result;
-    });
+        }).then((result: GraphQLResult) => {
+            expect(result.errors, 'GraphQL errors while creating page').to.be.undefined;
+            expect(result?.data?.jcr?.addNode?.uuid, 'created page uuid').to.be.a('string');
+            return result;
+        })
+    );
+};
 
+// Guards against a race between createSite (async Groovy provisioning) and the
+// first file-creation call: /files is normally created by the template set
+// import, but if it isn't ready yet this will create it as jnt:folder.
+// Note: jnt:file nodes require a jnt:folder parent, NOT jnt:contentFolder.
 const ensureMediaRoot = (siteKey: string) => {
     const mediaRootPath = `/sites/${siteKey}/files`;
 
-    return cy.apollo({
-        query: NODES_BY_PATH_QUERY,
-        variables: {path: mediaRootPath}
-    }).then((result: CreateNodeResult) => {
-        const nodes = result?.data?.jcr?.nodesByPath ?? [];
-        if (nodes.length > 0) {
+    return getNodeByPath(mediaRootPath).then((result: GraphQLResult) => {
+        if (result?.data?.jcr?.nodeByPath?.uuid) {
             return;
         }
 
-        return cy.apollo({
-            mutation: CREATE_NODE_MUTATION,
-            variables: {
-                parentPathOrId: `/sites/${siteKey}`,
-                name: 'files',
-                primaryNodeType: 'jnt:contentFolder',
-                properties: [
-                    {
-                        name: 'jcr:title',
-                        language: 'en',
-                        value: 'Files'
-                    }
-                ]
-            }
-        }).then((createResult: CreateNodeResult) => {
+        return addNode({
+            parentPathOrId: `/sites/${siteKey}`,
+            name: 'files',
+            primaryNodeType: 'jnt:folder',
+            properties: [
+                {
+                    name: 'jcr:title',
+                    language: 'en',
+                    value: 'Files'
+                }
+            ]
+        }).then((createResult: GraphQLResult) => {
             expect(createResult.errors, 'GraphQL errors while creating /files').to.be.undefined;
         });
     });
 };
 
+// Uploads a jnt:file via GraphQL multipart.
+//
+// cy.request does not serialize FormData correctly, so the multipart body is
+// built manually as a raw string. Jahia's convention: the $file variable holds
+// the form-field key name (e.g. "filedata"); the server reads the binary from
+// that named field — do NOT use the graphql-multipart-spec null+map approach
+// (that causes Jahia to store "org.apache...@xxx" as jcr:data).
+//
+// File content is derived from the filename (hyphens → spaces, no extension)
+// so that full-text search can find the file by keyword phrases. Lucene treats
+// hyphens as NOT operators, so search terms with hyphens won't match hyphenated
+// filenames — content with spaces is more reliably indexed.
+const uploadFile = (parentPathOrId: string, name: string): Cypress.Chainable<GraphQLResult> => {
+    const boundary = `CypressBoundary${Date.now()}`;
+    const fileKey = 'filedata';
+    const fileContent = name.replace(/-/g, ' ').replace(/\.\w+$/, '');
+
+    const body = [
+        `--${boundary}`,
+        `Content-Disposition: form-data; name="query"`,
+        '',
+        UPLOAD_FILE_MUTATION,
+        `--${boundary}`,
+        `Content-Disposition: form-data; name="variables"`,
+        '',
+        JSON.stringify({file: fileKey, parentPathOrId, name}),
+        `--${boundary}`,
+        `Content-Disposition: form-data; name="${fileKey}"; filename="${name}"`,
+        'Content-Type: text/plain',
+        '',
+        fileContent,
+        `--${boundary}--`
+    ].join('\r\n');
+
+    return cy.request({
+        method: 'POST',
+        url: '/modules/graphql',
+        headers: {
+            'Content-Type': `multipart/form-data; boundary=${boundary}`,
+            'Origin': Cypress.config('baseUrl')
+        },
+        auth: {user: 'root', pass: Cypress.env('SUPER_USER_PASSWORD')},
+        body
+    }).then(response => response.body as GraphQLResult);
+};
+
 export const createMediaViaGraphql = (siteKey: string, fileName: string) =>
     ensureMediaRoot(siteKey).then(() =>
-        cy.apollo({
-            mutation: CREATE_NODE_MUTATION,
-            variables: {
-                parentPathOrId: `/sites/${siteKey}/files`,
-                name: fileName,
-                primaryNodeType: 'jnt:file'
-            }
-        }).then((result: CreateNodeResult) => {
+        uploadFile(`/sites/${siteKey}/files`, fileName).then((result: GraphQLResult) => {
             expect(result.errors, 'GraphQL errors while creating media').to.be.undefined;
-            expect(result?.data?.jcr?.addNode?.path, 'created media path').to.be.a('string');
+            expect(result?.data?.jcr?.addNode?.uuid, 'created media uuid').to.be.a('string');
             return result;
         })
     );
+
+// kfindtest:mainResource (defined in the kfind-test-module CND) extends
+// jnt:content + jmix:mainResource. It cannot be placed under jnt:contentFolder
+// — only under jnt:page (e.g. /home). The kfind main-resources provider
+// searches site-wide via pathType: ANCESTOR, so location doesn't affect results.
+export const createMainResourceViaGraphql = (siteKey: string, nodeName: string, title: string) =>
+    addNode({
+        parentPathOrId: `/sites/${siteKey}/home`,
+        name: nodeName,
+        primaryNodeType: 'kfindtest:mainResource',
+        properties: [
+            {
+                name: 'jcr:title',
+                language: 'en',
+                value: title
+            }
+        ]
+    }).then((result: GraphQLResult) => {
+        expect(result.errors, 'GraphQL errors while creating main resource').to.be.undefined;
+        expect(result?.data?.jcr?.addNode?.uuid, 'created main resource uuid').to.be.a('string');
+        return result;
+    });

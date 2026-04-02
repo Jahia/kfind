@@ -5,6 +5,7 @@ export const JCR_MEDIA_BY_CRITERIA_QUERY = gql`
     $limit: Int!
     $offset: Int!
     $searchTerm: String!
+    $vSearchTerm: String!
     $sitePath: String!
     $language: String!
   ) {
@@ -19,8 +20,10 @@ export const JCR_MEDIA_BY_CRITERIA_QUERY = gql`
           language: $language
           nodeConstraint: {
             any: [
-              { contains: $searchTerm }
-              { contains: $searchTerm, property: "j:tagList" }
+              { contains: $searchTerm },
+              { contains: $searchTerm, property: "j:tagList" },
+              { contains: $vSearchTerm},
+              { like: $vSearchTerm, property: "j:nodename" }
             ]
           }
         }

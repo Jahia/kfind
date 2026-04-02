@@ -48,6 +48,9 @@ export function createJcrSearchProvider(
 ): KFindResultsProvider {
   return withStaleResponseFiltering(async (query, page) => {
     const sitePath = `/sites/${getSiteKey()}`;
+    // Lucene treats hyphens as NOT operators, so replace with spaces for
+    // consistent full-text matching (e.g. "my-term" → "my term").
+    const searchTerm = query.replace(/-/g, " ");
 
     // Request PAGE_SIZE + 1 to check if there are more items to paginate
     const limit = PAGE_SIZE + 1;
@@ -57,7 +60,8 @@ export function createJcrSearchProvider(
     }>({
       query: queryDoc,
       variables: {
-        searchTerm: query,
+        searchTerm,
+        vSearchTerm: "%" + searchTerm + "%",
         sitePath,
         language: getSearchLanguage(),
         limit,

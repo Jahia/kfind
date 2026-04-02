@@ -5,6 +5,7 @@ export const JCR_NODES_BY_CRITERIA_QUERY = gql`
     $limit: Int!
     $offset: Int!
     $searchTerm: String!
+    $vSearchTerm: String!
     $sitePath: String!
     $language: String!
   ) {
@@ -20,7 +21,9 @@ export const JCR_NODES_BY_CRITERIA_QUERY = gql`
           nodeConstraint: {
             any: [
               { contains: $searchTerm }
-              { contains: $searchTerm, property: "j:tagList" }
+              { contains: $searchTerm, property: "j:tagList" },
+              { contains: $vSearchTerm},
+              { like: $vSearchTerm, property: "j:nodename" }
             ]
           }
         }
