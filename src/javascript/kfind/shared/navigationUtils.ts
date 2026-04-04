@@ -127,7 +127,10 @@ function dispatchParent(action: unknown): void {
   }
 }
 
-/** Type-safe accessor for Jahia UI registry to avoid unsafe \`unknown\` casting. */
+/**
+ * Typed wrapper around runtime registry lookup.
+ * Uses a guarded `any` bridge because registry typings do not expose `get`.
+ */
 function getRegistryEntry<T>(type: string, key: string): T | undefined {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (registry as any).get?.(type, key) as T;

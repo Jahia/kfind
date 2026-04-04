@@ -11,10 +11,8 @@
  * Keyboard:
  * - Enter / click → onAction (navigate to the node)
  * - E → onSecondaryAction (open content editor, if available)
- * - ArrowDown / ArrowUp → move focus between result items
- * - ArrowUp on first item → return focus to the search input
  */
-import React from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import {
   Button,
   Chip,
@@ -24,9 +22,8 @@ import {
   Typography,
 } from "@jahia/moonstone";
 import { useTranslation } from "react-i18next";
+import { getResultTitleMaxLength } from "../shared/configUtils.ts";
 import s from "./ResultCard.module.css";
-
-const MAX_NAME_LENGTH = 80;
 
 type ResultCardProps = {
   readonly title: string;
@@ -34,13 +31,12 @@ type ResultCardProps = {
   readonly path: string;
   readonly excerpt?: string | null;
   readonly thumbnailUrl?: string | null;
+  readonly rowIndex?: number;
   readonly tabIndex?: number;
   /** Called when the row is clicked or Enter is pressed. */
   readonly onAction: () => void;
   /** Optional secondary action button (e.g. edit). Hidden by default, shown on hover. */
   readonly onSecondaryAction?: () => void;
-  readonly scrollContainerRef: React.RefObject<HTMLDivElement>;
-  readonly inputWrapperRef: React.RefObject<HTMLDivElement>;
 };
 
 export const ResultCard = ({
@@ -49,56 +45,39 @@ export const ResultCard = ({
   path,
   excerpt,
   thumbnailUrl,
+  rowIndex,
   tabIndex = -1,
   onAction,
   onSecondaryAction,
-  scrollContainerRef,
-  inputWrapperRef,
 }: ResultCardProps) => {
   const { t } = useTranslation();
+  const maxNameLength = getResultTitleMaxLength();
 
-  const displayTitle =
-    title.length > MAX_NAME_LENGTH
-      ? title.slice(0, MAX_NAME_LENGTH) + "…"
-      : title;
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+  const handleRowKeyDown = (event: ReactKeyboardEvent<HTMLLIElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
       onAction();
       return;
     }
 
-    if (onSecondaryAction && (e.key === "e" || e.key === "E")) {
-      e.preventDefault();
+    if (onSecondaryAction && (event.key === "e" || event.key === "E")) {
+      event.preventDefault();
       onSecondaryAction();
-      return;
-    }
-
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault();
-      const rows = Array.from(
-        scrollContainerRef.current?.querySelectorAll<HTMLElement>(
-          '[data-kfind-result-row="true"][tabindex]',
-        ) ?? [],
-      );
-      const idx = rows.indexOf(e.currentTarget as HTMLElement);
-      const next = e.key === "ArrowDown" ? idx + 1 : idx - 1;
-      if (next >= 0 && next < rows.length) {
-        rows[next].focus();
-      } else if (next < 0) {
-        inputWrapperRef.current?.querySelector<HTMLElement>("input")?.focus();
-      }
     }
   };
+
+  const displayTitle =
+    title.length > maxNameLength ? title.slice(0, maxNameLength) + "…" : title;
 
   return (
       <li
       data-kfind-result
       data-kfind-result-row="true"
+      data-kfind-result-index={rowIndex}
       className={excerpt ? s.resultRow : s.resultRowCompact}
       tabIndex={tabIndex}
       onClick={onAction}
-      onKeyDown={handleKeyDown}
+      onKeyDown={handleRowKeyDown}
       >
           <div className={s.resultRowContent}>
               {thumbnailUrl && (

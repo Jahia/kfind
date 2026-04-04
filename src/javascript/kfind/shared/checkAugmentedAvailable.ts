@@ -4,6 +4,10 @@ import { SITE_INDEX_QUERY } from "../../kfind-providers/augmented/augmentedSearc
 const cache = new Map<string, boolean>();
 const pending = new Map<string, Promise<boolean>>();
 
+// Intentional behavior: a failed availability check is cached as `false`
+// for this page session. This fail-closed strategy avoids repeated network
+// retries and keeps provider activation deterministic after an error.
+
 export function checkAugmentedAvailable(
   client: ApolloClientInstance,
   siteKey: string,

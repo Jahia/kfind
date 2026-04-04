@@ -5,18 +5,18 @@ import { I18nextProvider } from "react-i18next";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
-import { KFindModal } from "./KFindModal.tsx";
+import { KFindModal } from "./KFindModal/KFindModal.tsx";
 
 const MODAL_CONTAINER_ID = "kfind-search-modal";
 
 let modalRoot: Root | undefined;
 
 const NavSearchButton: React.FC = () => (
-    <PrimaryNavItem
-        icon={<Search/>}
-        label="Search"
-        onClick={() => window.dispatchEvent(new CustomEvent("kfind:open-search"))}
-    />
+  <PrimaryNavItem
+    icon={<Search />}
+    label="Search"
+    onClick={() => window.dispatchEvent(new CustomEvent("kfind:open-search"))}
+  />
 );
 
 const ensureI18nReady = async () => {
@@ -45,17 +45,17 @@ const mountModal = () => {
 
   // Mount the search modal once, independent of the active route, so the
   // cmd+k shortcut works from anywhere in the application.
-    modalRoot.render(
-        <I18nextProvider i18n={i18n} defaultNS="kfind">
-            <KFindModal/>
-        </I18nextProvider>,
-    );
+  modalRoot.render(
+    <I18nextProvider i18n={i18n} defaultNS="kfind">
+      <KFindModal />
+    </I18nextProvider>,
+  );
 };
 
 registry.add("primary-nav-item", "kfind-search", {
   targets: ["nav-root-top:99"],
   requireModuleInstalledOnSite: "kfind",
-    render: () => <NavSearchButton/>,
+  render: () => <NavSearchButton />,
 });
 
 export const registerRoutes = async () => {

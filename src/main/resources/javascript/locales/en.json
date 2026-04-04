@@ -12,7 +12,7 @@
       "label": "Search",
       "title": "Welcome to kfind",
       "siteInfo": "Searching in {{site}}, {{language}}",
-      "hint": "Press Ctrl+K or ⌘K to open me. Esc to close. Navigate with arrows or tabs. Enter to go to. e for edit.",
+      "hint": "Press Ctrl+K or ⌘K to open me. Esc to close. Navigate with Tab. Enter to go to. e for edit.",
       "reportIssue": "Report bugs and improvements at https://github.com/Jahia/kfind/issues"
     },
     "empty": {

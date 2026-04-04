@@ -6,12 +6,11 @@
  *   - Bottom row: search input with clear button
  *
  * Keyboard handling:
- *   - ArrowDown from the input focuses the first result item.
  *   - Enter submits the form (immediate re-query).
  *
  * The moonstone Input renders a clear button that is focusable by default;
  * a MutationObserver patches its tabIndex to −1 so it doesn't interfere
- * with the arrow-key navigation flow.
+ * with keyboard tab order.
  */
 import React, { useEffect } from "react";
 import type { FormEvent } from "react";
@@ -26,7 +25,6 @@ type KFindHeaderProps = {
   readonly onSearchClear: () => void;
   readonly onTriggerSearch: (value: string) => void;
   readonly focusOnField?: boolean;
-  readonly scrollContainerRef: React.RefObject<HTMLDivElement>;
   readonly inputWrapperRef: React.RefObject<HTMLDivElement>;
 };
 
@@ -36,7 +34,6 @@ export const KFindHeader = ({
   onSearchClear,
   onTriggerSearch,
   focusOnField,
-  scrollContainerRef,
   inputWrapperRef,
 }: KFindHeaderProps) => {
   const { t } = useTranslation();
@@ -46,7 +43,8 @@ export const KFindHeader = ({
     onTriggerSearch(searchValue);
   };
 
-  // Keep the moonstone clear button out of the tab order.
+  // Moonstone Input (v2.17.5 in this project) does not expose a prop to
+  // control clear-button tab focusability, so we patch it post-render.
   useEffect(() => {
     const wrapper = inputWrapperRef.current;
     if (!wrapper) {
@@ -81,7 +79,11 @@ export const KFindHeader = ({
               </Typography>
           </div>
           <div ref={inputWrapperRef} data-kfind-search-input-wrapper="true">
-              <form role="search" data-kfind-search-form="true" onSubmit={handleSubmit}>
+              <form
+          role="search"
+          data-kfind-search-form="true"
+          onSubmit={handleSubmit}
+              >
                   <Input
             size="big"
             type="search"
@@ -90,16 +92,6 @@ export const KFindHeader = ({
             icon={<Search/>}
             focusOnField={focusOnField}
             onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                scrollContainerRef.current
-                  ?.querySelector<HTMLElement>(
-                    '[data-kfind-result-row="true"][tabindex]',
-                  )
-                  ?.focus();
-              }
-            }}
             onClear={onSearchClear}
           />
               </form>

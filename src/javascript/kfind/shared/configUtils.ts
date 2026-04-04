@@ -21,6 +21,16 @@ export function getDefaultDisplayedResults(): number {
   return cfg()?.defaultDisplayedResults ?? 5;
 }
 
+export function getShowMoreIncrement(): number {
+  // Kept configurable separately from provider max results: this controls
+  // how many additional rows are revealed per click in the UI.
+  return cfg()?.showMoreIncrement ?? 10;
+}
+
+export function getResultTitleMaxLength(): number {
+  return cfg()?.resultTitleMaxLength ?? 80;
+}
+
 export function isProviderEnabled(key: KFindKey): boolean {
   return cfg()?.[key] !== false;
 }

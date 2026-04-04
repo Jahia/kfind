@@ -18,11 +18,12 @@
  * (`onHitAction`, `onSecondaryAction`) from KFindPanel, which itself
  * delegates to the provider's `locate()` and `edit()` methods.
  */
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
 import { Button, Typography } from "@jahia/moonstone";
 import { useTranslation } from "react-i18next";
 import { ResultCard } from "../ResultCard/ResultCard.tsx";
 import type { SearchHit } from "../../kfind-providers/types.ts";
+import { useResultsPagination } from "../shared/useResultsPagination.ts";
 import resultsLayout from "../shared/resultsTableLayout.module.css";
 import s from "./ResultsSection.module.css";
 
@@ -34,8 +35,6 @@ type ResultsSectionProps = {
   readonly hasMore: boolean;
   readonly maxResults: number;
   readonly trimmedQuery: string;
-  readonly scrollContainerRef: React.RefObject<HTMLDivElement>;
-  readonly inputWrapperRef: React.RefObject<HTMLDivElement>;
   readonly onHitAction: (hit: SearchHit) => void;
   readonly onSecondaryAction?: (hit: SearchHit) => void;
   readonly onLoadMore: () => void;
@@ -49,72 +48,23 @@ export const ResultsSection = ({
   hasMore,
   maxResults,
   trimmedQuery,
-  scrollContainerRef,
-  inputWrapperRef,
   onHitAction,
   onSecondaryAction,
   onLoadMore,
 }: ResultsSectionProps) => {
   const { t } = useTranslation();
-  const [displayedCount, setDisplayedCount] = useState(maxResults);
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const focusFirstNewRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    setDisplayedCount(maxResults);
-  }, [trimmedQuery, maxResults]);
-
-  const visibleHits = hits.slice(0, displayedCount);
-  const hasMoreToShow = displayedCount < hits.length || hasMore;
-
-  const handleShowMore = () => {
-    focusFirstNewRef.current = visibleHits.length;
-    const newCount = displayedCount + 10;
-    setDisplayedCount(newCount);
-    if (newCount >= hits.length && hasMore) {
-      onLoadMore();
-    }
-  };
-
-  const focusLastVisibleResult = () => {
-    const rows =
-      sectionRef.current?.querySelectorAll<HTMLElement>(
-        '[data-kfind-result-row="true"][tabindex]',
-      ) ?? [];
-    const lastRow = rows[rows.length - 1];
-    if (lastRow) {
-      lastRow.focus();
-      return;
-    }
-
-    inputWrapperRef.current?.querySelector<HTMLElement>("input")?.focus();
-  };
-
-  // After new items appear in the DOM, focus the first one that was just loaded.
-  useEffect(() => {
-    if (focusFirstNewRef.current === null) {
-      return;
-    }
-
-    const prevLength = focusFirstNewRef.current;
-    if (visibleHits.length <= prevLength) {
-      return;
-    }
-
-    const items =
-      sectionRef.current?.querySelectorAll<HTMLElement>(
-        '[data-kfind-result-row="true"][tabindex]',
-      ) ?? [];
-    const firstNew = items[prevLength];
-    if (firstNew) {
-      firstNew.focus();
-      focusFirstNewRef.current = null;
-    }
-  }, [visibleHits.length]);
+  const { visibleHits, hasMoreToShow, handleShowMore } = useResultsPagination({
+    hits,
+    maxResults,
+    trimmedQuery,
+    hasMore,
+    onLoadMore,
+  });
 
   const renderRows = useCallback(
     () =>
-      visibleHits.map((hit) => (
+      visibleHits.map((hit, index) => (
           <ResultCard
           key={hit.id}
           title={hit.displayableName}
@@ -122,20 +72,13 @@ export const ResultsSection = ({
           path={hit.path}
           excerpt={hit.excerpt}
           thumbnailUrl={hit.thumbnailUrl}
+          rowIndex={index}
           tabIndex={0}
-          scrollContainerRef={scrollContainerRef}
-          inputWrapperRef={inputWrapperRef}
           onAction={() => onHitAction(hit)}
           onSecondaryAction={onSecondaryAction ? () => onSecondaryAction(hit) : undefined}
         />
       )),
-    [
-      visibleHits,
-      onHitAction,
-      onSecondaryAction,
-      scrollContainerRef,
-      inputWrapperRef,
-    ],
+    [visibleHits, onHitAction, onSecondaryAction],
   );
 
   // Hide the section entirely when there are no results and we're not loading.
@@ -145,22 +88,9 @@ export const ResultsSection = ({
 
   return (
       <div
-      ref={sectionRef}
       className={`${resultsLayout.section} ${s.section}`}
       data-kfind-results-section={sectionKey}
-      onKeyDownCapture={(event) => {
-        if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
-          return;
-        }
-
-        const active = document.activeElement as HTMLElement | null;
-        if (!active || active.dataset.kfindShowMore !== "true") {
-          return;
-        }
-
-        event.preventDefault();
-        focusLastVisibleResult();
-      }}
+      data-kfind-results-section-key={sectionKey}
       >
           <Typography variant="heading">{title}</Typography>
 
@@ -186,6 +116,7 @@ export const ResultsSection = ({
           variant="ghost"
           label={t("search.showMore", "Show more")}
           data-kfind-show-more="true"
+          data-kfind-show-more-section={sectionKey}
           onClick={handleShowMore}
         />
       )}

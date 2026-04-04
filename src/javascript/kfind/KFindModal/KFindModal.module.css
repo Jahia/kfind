@@ -1,0 +1,36 @@
+:global(.search-modal.moonstone-modal) {
+  top: 32px;
+  bottom: 32px;
+  height: auto;
+  max-height: none;
+}
+
+:global(.search-modal .moonstone-modal_body) {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalWidth {
+  width: 800px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.footerLayout {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.footerHints {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

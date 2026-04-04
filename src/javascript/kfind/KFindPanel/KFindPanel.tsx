@@ -58,7 +58,6 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
           <KFindHeader
         searchValue={searchValue}
         focusOnField={focusOnField}
-        scrollContainerRef={scrollContainerRef}
         inputWrapperRef={inputWrapperRef}
         onSearchChange={setSearchValue}
         onSearchClear={handleSearchClear}
@@ -66,9 +65,9 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
       />
 
           <div
-          ref={scrollContainerRef}
-          className={styles.scrollContainer}
-          data-kfind-scroll-container="true"
+        ref={scrollContainerRef}
+        className={styles.scrollContainer}
+        data-kfind-scroll-container="true"
           >
               {/* ── Empty state ── */}
               {trimmedQuery.length < minChars && !hasAnyResults && (
@@ -94,8 +93,6 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
             hasMore={state.hasMore}
             maxResults={registration.maxResults()}
             trimmedQuery={trimmedQuery}
-            scrollContainerRef={scrollContainerRef}
-            inputWrapperRef={inputWrapperRef}
             onHitAction={(hit) => {
               registration.locate(hit);
               onNavigate?.();
@@ -114,10 +111,10 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
                   </Typography>
                   <Typography variant="body" component="p">
                       {t(
-                      "search.noResults.hint",
-                      'Nothing matched "{{q}}". Try different keywords or check for typos.',
-                      { q: trimmedQuery },
-                    )}
+                "search.noResults.hint",
+                'Nothing matched "{{q}}". Try different keywords or check for typos.',
+                { q: trimmedQuery },
+              )}
                   </Typography>
               </div>
         )}

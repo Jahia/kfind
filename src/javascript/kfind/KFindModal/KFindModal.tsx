@@ -12,7 +12,9 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApolloProvider } from "@apollo/client";
 import { Modal, ModalFooter, Typography } from "@jahia/moonstone";
-import { KFindPanel } from "./KFindPanel/KFindPanel.tsx";
+import { KFindPanel } from "../KFindPanel/KFindPanel.tsx";
+import s from "./KFindModal.module.css";
+
 function logModalDebug(message: string, error: unknown): void {
   if (!import.meta.env.DEV) {
     return;
@@ -76,68 +78,51 @@ export const KFindModal = () => {
   }
 
   return (
-    <>
-      <style>
-        {`
-        .search-modal.moonstone-modal { top: 32px; bottom: 32px; height: auto; max-height: none; }
-        .search-modal .moonstone-modal_body { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
-      `}
-      </style>
-      <Modal
-        isOpen={isOpen}
-        size="full"
-        className="search-modal"
-        data-kfind-modal="true"
-        style={{ width: "800px" }}
-        onOpenChange={setIsOpen}
-      >
-        <>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              flex: 1,
-              overflow: "hidden",
-            }}
-          >
-            <ApolloProvider client={apolloClient}>
-              <KFindPanel focusOnField onNavigate={() => setIsOpen(false)} />
-            </ApolloProvider>
-          </div>
-          <ModalFooter>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                width: "100%",
-              }}
-            >
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: "2px" }}
-              >
-                <Typography variant="caption">
-                  {t(
-                    "search.modal.hint",
-                    "Press Ctrl+K or ⌘K to open · Esc to close · ↑↓ navigate · Enter to go · E to edit",
-                  )}
-                </Typography>
-                <Typography variant="caption">
-                  {t(
-                    "search.modal.reportIssue",
-                    "Report bugs and improvements at https://github.com/Jahia/kfind/issues",
-                  )}
-                </Typography>
-              </div>
-              {/* Build time shown only in dev builds */}
-              {import.meta.env.DEV && (
-                <Typography variant="caption" style={{ opacity: 0.4 }}>
-                  {window.contextJsParameters.kfind?.buildTime ?? ""}
-                </Typography>
-              )}
+    <Modal
+      isOpen={isOpen}
+      size="full"
+      className={`search-modal ${s.modalWidth}`}
+      data-kfind-modal="true"
+      onOpenChange={setIsOpen}
+    >
+      <>
+        <div className={s.content}>
+          <ApolloProvider client={apolloClient}>
+            <KFindPanel focusOnField onNavigate={() => setIsOpen(false)} />
+          </ApolloProvider>
+        </div>
+        <ModalFooter>
+          <div className={s.footerLayout}>
+            <div className={s.footerHints}>
+              <Typography variant="caption">
+                {t(
+                  "search.modal.hint",
+                  "Press Ctrl+K or ⌘K to open · Esc to close · Tab to navigate · Enter to go · E to edit",
+                )}
+              </Typography>
+              <Typography variant="caption">
+                {t(
+                  "search.modal.reportIssuePrefix",
+                  "Report bugs and improvements at",
+                )}{" "}
+                <a
+                  href="https://github.com/Jahia/kfind/issues"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  https://github.com/Jahia/kfind/issues
+                </a>
+              </Typography>
             </div>
-          </ModalFooter>
-        </>
-      </Modal>
-    </>
+            {/* Build time shown only in dev builds */}
+            {import.meta.env.DEV && (
+              <Typography variant="caption" style={{ opacity: 0.4 }}>
+                {window.contextJsParameters.kfind?.buildTime ?? ""}
+              </Typography>
+            )}
+          </div>
+        </ModalFooter>
+      </>
+    </Modal>
   );
 };
