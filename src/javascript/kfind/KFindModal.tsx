@@ -76,58 +76,68 @@ export const KFindModal = () => {
   }
 
   return (
-      <>
-          <style>
-              {`
+    <>
+      <style>
+        {`
         .search-modal.moonstone-modal { top: 32px; bottom: 32px; height: auto; max-height: none; }
         .search-modal .moonstone-modal_body { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
       `}
-          </style>
-          <Modal
+      </style>
+      <Modal
         isOpen={isOpen}
         size="full"
         className="search-modal"
         data-kfind-modal="true"
         style={{ width: "800px" }}
         onOpenChange={setIsOpen}
-          >
-              <>
-                  <div
+      >
+        <>
+          <div
             style={{
               display: "flex",
               flexDirection: "column",
               flex: 1,
               overflow: "hidden",
             }}
-                  >
-                      <ApolloProvider client={apolloClient}>
-                          <KFindPanel focusOnField onNavigate={() => setIsOpen(false)}/>
-                      </ApolloProvider>
-                  </div>
-                  <ModalFooter>
-                      <div
+          >
+            <ApolloProvider client={apolloClient}>
+              <KFindPanel focusOnField onNavigate={() => setIsOpen(false)} />
+            </ApolloProvider>
+          </div>
+          <ModalFooter>
+            <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 width: "100%",
               }}
-                      >
-                          <Typography variant="caption">
-                              {t(
-                  "search.modal.hint",
-                  "Press Ctrl+K or ⌘K to open · Esc to close · ↑↓ navigate · Enter to go · E to edit",
-                )}
-                          </Typography>
-                          {/* Build time shown only in dev builds */}
-                          {import.meta.env.DEV && (
-                          <Typography variant="caption" style={{ opacity: 0.4 }}>
-                              {window.contextJsParameters.kfind?.buildTime ?? ""}
-                          </Typography>
+            >
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: "2px" }}
+              >
+                <Typography variant="caption">
+                  {t(
+                    "search.modal.hint",
+                    "Press Ctrl+K or ⌘K to open · Esc to close · ↑↓ navigate · Enter to go · E to edit",
+                  )}
+                </Typography>
+                <Typography variant="caption">
+                  {t(
+                    "search.modal.reportIssue",
+                    "Report bugs and improvements at https://github.com/Jahia/kfind/issues",
+                  )}
+                </Typography>
+              </div>
+              {/* Build time shown only in dev builds */}
+              {import.meta.env.DEV && (
+                <Typography variant="caption" style={{ opacity: 0.4 }}>
+                  {window.contextJsParameters.kfind?.buildTime ?? ""}
+                </Typography>
               )}
-                      </div>
-                  </ModalFooter>
-              </>
-          </Modal>
-      </>
+            </div>
+          </ModalFooter>
+        </>
+      </Modal>
+    </>
   );
 };
