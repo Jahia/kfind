@@ -20,6 +20,9 @@
     <properties>
         <!--<require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability> -->
         <jahia-depends>default,graphql-dxm-provider</jahia-depends>
+        <graphql-dxm-provider.version>3.6.0</graphql-dxm-provider.version>
+        <graphql-java-annotations.version>9.1</graphql-java-annotations.version>
+        <node.version>v22.14.0</node.version>
     </properties>
 
     <repositories>
@@ -41,13 +44,13 @@
         <dependency>
             <groupId>org.jahia.modules</groupId>
             <artifactId>graphql-dxm-provider</artifactId>
-            <version>3.6.0</version>
+            <version>${graphql-dxm-provider.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.github.graphql-java</groupId>
             <artifactId>graphql-java-annotations</artifactId>
-            <version>9.1</version>
+            <version>${graphql-java-annotations.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -59,25 +62,6 @@
             </resource>
         </resources>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.6.3</version>
-                <executions>
-                    <execution>
-                        <id>yarn-install</id>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>yarn-build</id>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
               <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -103,7 +87,12 @@
                         <fileset>
                             <directory>src/main/resources/javascript/apps</directory>
                             <includes>
-                                <include>**</include>
+                                <include>@mf-types/**</include>
+                                <include>assets/**</include>
+                                <include>index.js</include>
+                                <include>index.js.map</include>
+                                <include>remoteEntry.js</include>
+                                <include>package.json</include>
                             </includes>
                         </fileset>
                     </filesets>
@@ -124,7 +113,7 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <nodeVersion>v22.14.0</nodeVersion>
+                            <nodeVersion>${node.version}</nodeVersion>
                         </configuration>
                     </execution>
                     <execution>
