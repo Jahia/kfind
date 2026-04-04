@@ -20,6 +20,17 @@ export default defineConfig({
             // eslint-disable-next-line @typescript-eslint/no-var-requires
             return require('./cypress/plugins/index.js')(on, config);
         },
+        specPattern: [
+            'cypress/e2e/kfind0Setup.cy.ts',
+            'cypress/e2e/kfindEdgeCases.cy.ts',
+            'cypress/e2e/kfindFeatures.cy.ts',
+            'cypress/e2e/kfindInteraction.cy.ts',
+            'cypress/e2e/kfindMainResources.cy.ts',
+            'cypress/e2e/kfindMedia.cy.ts',
+            'cypress/e2e/kfindPages.cy.ts',
+            'cypress/e2e/kfindPagination.cy.ts',
+            'cypress/e2e/kfindZTeardown.cy.ts'
+        ],
         excludeSpecPattern: '*.ignore.ts',
         baseUrl: process.env.CYPRESS_BASE_URL || 'http://localhost:8080'
     }

@@ -1,20 +1,16 @@
-import {enableModule, createSite, deleteSite} from '@jahia/cypress';
 import {
     closeSearchModal,
     createPageViaGraphql,
-    searchInModal
+    searchInModal,
+    SITE_KEY
 } from './kfindProviders.helpers';
 
 describe('kFind pages provider', () => {
-    const SITE_KEY = 'kfind-pages-site';
     const token = Date.now().toString();
     const exactTitle = `kfind pages exact ${token}`;
     const broaderTitle = `kfind pages broader ${token}`;
 
-    before('Create test site, enable module and seed page content via GraphQL', () => {
-        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
-        enableModule('kfind', SITE_KEY);
-
+    before('Seed page content via GraphQL', () => {
         cy.login();
         createPageViaGraphql(SITE_KEY, `kfind-pages-exact-${token}`, exactTitle);
         createPageViaGraphql(SITE_KEY, `kfind-pages-broader-${token}`, broaderTitle);
@@ -28,10 +24,6 @@ describe('kFind pages provider', () => {
 
     afterEach(() => {
         closeSearchModal();
-    });
-
-    after('Delete test site', () => {
-        deleteSite(SITE_KEY);
     });
 
     it('finds a page created via GraphQL', () => {

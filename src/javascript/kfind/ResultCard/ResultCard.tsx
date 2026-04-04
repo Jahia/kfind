@@ -117,7 +117,6 @@ export const ResultCard = ({
                   </div>
                   {excerpt && (
                   <Typography variant="caption" className={s.resultRowExcerpt}>
-                      {/* TODO: Validated upstream, consider adding client-side serialization validation here */}
                       {/* Excerpt is sanitized upstream before rendering. */}
                       {/* eslint-disable-next-line react/no-danger */}
                       <span dangerouslySetInnerHTML={{ __html: excerpt }}/>

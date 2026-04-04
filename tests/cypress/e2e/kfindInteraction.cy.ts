@@ -1,18 +1,14 @@
-import {enableModule, createSite, deleteSite} from '@jahia/cypress';
 import {
     closeSearchModal,
     createPageViaGraphql,
-    searchInModal
+    searchInModal,
+    SITE_KEY
 } from './kfindProviders.helpers';
 
 describe('kFind keyboard interaction', () => {
-    const SITE_KEY = 'kfind-interaction-site';
     const token = Date.now().toString();
 
-    before('Create test site, enable module and seed page content', () => {
-        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
-        enableModule('kfind', SITE_KEY);
-
+    before('Seed page content', () => {
         cy.login();
         createPageViaGraphql(SITE_KEY, `kfind-nav-alpha-${token}`, `kfind nav alpha ${token}`);
         createPageViaGraphql(SITE_KEY, `kfind-nav-beta-${token}`, `kfind nav beta ${token}`);
@@ -26,10 +22,6 @@ describe('kFind keyboard interaction', () => {
 
     afterEach(() => {
         closeSearchModal();
-    });
-
-    after('Delete test site', () => {
-        deleteSite(SITE_KEY);
     });
 
     it('focuses the first result when pressing ArrowDown from the input', () => {

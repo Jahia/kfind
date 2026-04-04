@@ -80,8 +80,8 @@ export const KFindHeader = ({
           })}
               </Typography>
           </div>
-            <div ref={inputWrapperRef} data-kfind-search-input-wrapper="true">
-              <form role="search" onSubmit={handleSubmit} data-kfind-search-form="true">
+          <div ref={inputWrapperRef} data-kfind-search-input-wrapper="true">
+              <form role="search" data-kfind-search-form="true" onSubmit={handleSubmit}>
                   <Input
             size="big"
             type="search"

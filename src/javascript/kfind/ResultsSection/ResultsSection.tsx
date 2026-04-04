@@ -76,6 +76,20 @@ export const ResultsSection = ({
     }
   };
 
+  const focusLastVisibleResult = () => {
+    const rows =
+      sectionRef.current?.querySelectorAll<HTMLElement>(
+        '[data-kfind-result-row="true"][tabindex]',
+      ) ?? [];
+    const lastRow = rows[rows.length - 1];
+    if (lastRow) {
+      lastRow.focus();
+      return;
+    }
+
+    inputWrapperRef.current?.querySelector<HTMLElement>("input")?.focus();
+  };
+
   // After new items appear in the DOM, focus the first one that was just loaded.
   useEffect(() => {
     if (focusFirstNewRef.current === null) {
@@ -134,6 +148,19 @@ export const ResultsSection = ({
       ref={sectionRef}
       className={`${resultsLayout.section} ${s.section}`}
       data-kfind-results-section={sectionKey}
+      onKeyDownCapture={(event) => {
+        if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+          return;
+        }
+
+        const active = document.activeElement as HTMLElement | null;
+        if (!active || active.dataset.kfindShowMore !== "true") {
+          return;
+        }
+
+        event.preventDefault();
+        focusLastVisibleResult();
+      }}
       >
           <Typography variant="heading">{title}</Typography>
 

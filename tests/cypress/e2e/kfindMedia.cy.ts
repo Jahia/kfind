@@ -1,20 +1,16 @@
-import {enableModule, createSite, deleteSite} from '@jahia/cypress';
 import {
     closeSearchModal,
     createMediaViaGraphql,
-    searchInModal
+    searchInModal,
+    SITE_KEY
 } from './kfindProviders.helpers';
 
 describe('kFind media provider', () => {
-    const SITE_KEY = 'kfind-media-site';
     const token = Date.now().toString();
     const exactFile = `kfind-media-exact-${token}.txt`;
     const broaderFile = `kfind-media-broader-${token}.txt`;
 
-    before('Create test site, enable module and seed media content via GraphQL', () => {
-        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
-        enableModule('kfind', SITE_KEY);
-
+    before('Seed media content via GraphQL', () => {
         cy.login();
         createMediaViaGraphql(SITE_KEY, exactFile);
         createMediaViaGraphql(SITE_KEY, broaderFile);
@@ -28,10 +24,6 @@ describe('kFind media provider', () => {
 
     afterEach(() => {
         closeSearchModal();
-    });
-
-    after('Delete test site', () => {
-        // deleteSite(SITE_KEY); // commented out to inspect server state after run
     });
 
     it('finds a media node created via GraphQL', () => {

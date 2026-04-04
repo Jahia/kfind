@@ -72,22 +72,22 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
           >
               {/* ── Empty state ── */}
               {trimmedQuery.length < minChars && !hasAnyResults && (
-                <div className={s.emptyState} data-kfind-empty-state="hint">
-                  <Search size="big" />
+              <div className={s.emptyState} data-kfind-empty-state="hint">
+                  <Search size="big"/>
                   <Typography variant="subheading" component="p">
-                    {t("search.empty.title", "Find anything.")}
+                      {t("search.empty.title", "Find anything.")}
                   </Typography>
                   <Typography variant="body" component="p">
-                    {t("search.empty.hint", { min: minChars })}
+                      {t("search.empty.hint", { min: minChars })}
                   </Typography>
-                </div>
+              </div>
         )}
 
               {/* ── Result sections — one per active provider ── */}
               {providers.map(({ key, registration, state, loadNextPage }) => (
                   <ResultsSection
             key={key}
-                sectionKey={key}
+            sectionKey={key}
             title={t(registration.title, registration.titleDefault)}
             hits={state.allHits}
             loading={state.loading}
@@ -107,19 +107,19 @@ export const KFindPanel = ({ focusOnField, onNavigate }: KFindPanelProps) => {
 
               {/* ── Global "no results" — shown only when every visible section is empty ── */}
               {showGlobalNoResults && (
-                <div className={s.emptyState} data-kfind-empty-state="no-results">
-                  <Close />
+              <div className={s.emptyState} data-kfind-empty-state="no-results">
+                  <Close/>
                   <Typography variant="subheading" component="p">
-                    {t("search.noResults.title", "No results.")}
+                      {t("search.noResults.title", "No results.")}
                   </Typography>
                   <Typography variant="body" component="p">
-                    {t(
+                      {t(
                       "search.noResults.hint",
                       'Nothing matched "{{q}}". Try different keywords or check for typos.',
                       { q: trimmedQuery },
                     )}
                   </Typography>
-                </div>
+              </div>
         )}
           </div>
       </div>

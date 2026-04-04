@@ -1,20 +1,16 @@
-import {enableModule, createSite, deleteSite} from '@jahia/cypress';
 import {
     closeSearchModal,
     createMainResourceViaGraphql,
-    searchInModal
+    searchInModal,
+    SITE_KEY
 } from './kfindProviders.helpers';
 
 describe('kFind main resources provider', () => {
-    const SITE_KEY = 'kfind-main-resources-site';
     const token = Date.now().toString();
     const exactTitle = `kfind main resource exact ${token}`;
     const broaderTitle = `kfind main resource broader ${token}`;
 
-    before('Create test site, enable module and seed main resources via GraphQL', () => {
-        createSite(SITE_KEY, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
-        enableModule('kfind', SITE_KEY);
-
+    before('Seed main resources via GraphQL', () => {
         cy.login();
 
         createMainResourceViaGraphql(SITE_KEY, `kfind-main-resource-exact-${token}`, exactTitle);
@@ -37,10 +33,6 @@ describe('kFind main resources provider', () => {
 
     afterEach(() => {
         closeSearchModal();
-    });
-
-    after('Delete test site', () => {
-        deleteSite(SITE_KEY);
     });
 
     it('finds a main resource created via GraphQL', () => {
