@@ -26,13 +26,18 @@ echo "==> Building module ($MODE)..."
 t0=$(date +%s)
 mvn "${MVN_ARGS[@]}"
 
-JAR="$(ls "$SCRIPT_DIR"/target/kfind-*.jar 2>/dev/null | grep -v sources | head -1)"
-[[ -z "$JAR" ]] && { echo "✗ No JAR found in target/ after build." >&2; exit 1; }
+# Pick the most recently modified deployable JAR from target/, regardless of project name.
+# Excludes sources/javadoc and Maven's original-* backup artifacts.
+JAR="$(ls -t "$SCRIPT_DIR"/target/*.jar 2>/dev/null | grep -Ev '(-sources|-javadoc)\.jar$|/original-.*\.jar$' | head -1)"
+[[ -z "$JAR" ]] && {
+  echo "✗ No deployable JAR found in target/ after build." >&2
+  exit 1
+}
 echo "==> Build done ($(du -h "$JAR" | cut -f1))"
 
 # Deploy
 echo "==> Deploying to $JAHIA_URL ..."
-HTTP_RESPONSE=$(curl --silent --show-error --max-time 120 --write-out "\nHTTP_STATUS:%{http_code}" \
+HTTP_RESPONSE=$(curl --silent --show-error --insecure --max-time 120 --write-out "\nHTTP_STATUS:%{http_code}" \
   -u "$JAHIA_USER:$JAHIA_PASS" -X POST "$JAHIA_URL/modules/api/provisioning" \
   --form "script=[{\"installBundle\":\"$(basename "$JAR")\",\"autoStart\":true,\"forceUpdate\":true,\"uninstallPreviousVersion\":true}]" \
   --form "file=@$JAR")

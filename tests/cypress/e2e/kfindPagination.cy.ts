@@ -52,4 +52,26 @@ describe('kFind pagination behavior', () => {
                     .should('be.greaterThan', countBefore);
             });
     });
+
+    it('keeps ArrowUp and ArrowDown navigation on result rows (not Show more)', () => {
+        searchInModal(`kfind pagination ${token}`);
+
+        cy.get('[data-kfind-result-row="true"][tabindex]', {timeout: 20000})
+            .its('length')
+            .then(initialCount => {
+                const count = Number(initialCount);
+                expect(count).to.be.greaterThan(0);
+            });
+
+        cy.get('@searchInput').type('{downarrow}');
+        cy.focused().should('have.attr', 'data-kfind-result-row', 'true');
+
+        cy.get('[data-kfind-show-more="true"]', {timeout: 20000}).first().focus();
+        cy.focused().type('{downarrow}');
+        cy.focused().should('have.attr', 'data-kfind-result-row', 'true');
+
+        cy.get('[data-kfind-show-more="true"]', {timeout: 20000}).first().focus();
+        cy.focused().type('{uparrow}');
+        cy.focused().should('have.attr', 'data-kfind-result-row', 'true');
+    });
 });

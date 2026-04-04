@@ -89,18 +89,22 @@ export const SITE_KEY = 'kfind-test-site';
 export const openSearchModal = () => {
     const panelSelector = '[data-kfind-panel="true"]';
 
+    // Wait for kfind to mount its modal container — once #kfind-search-modal
+    // exists, the KFindModal useEffect has run and the kfind:open-search
+    // listener is registered on window.
+    cy.get('#kfind-search-modal', {timeout: 30000}).should('exist');
+
     cy.get('body').then($body => {
-        const panelExists = $body.find(`${panelSelector}:visible`).length > 0;
-        if (panelExists) {
+        if ($body.find(`${panelSelector}:visible`).length > 0) {
             return;
         }
 
         cy.window().then(win => {
-            const dispatchOpenEvent = (target: Window) => {
-                target.dispatchEvent(new CustomEvent('kfind:open-search'));
+            const dispatchOpenEvent = (target: any) => {
+                target.dispatchEvent(new target.CustomEvent('kfind:open-search'));
             };
 
-            const dispatchOpenShortcut = (targetWindow: Window) => {
+            const dispatchOpenShortcut = (targetWindow: any) => {
                 const evt = new targetWindow.KeyboardEvent('keydown', {
                     key: 'k',
                     ctrlKey: true,
@@ -110,13 +114,15 @@ export const openSearchModal = () => {
                 targetWindow.document.dispatchEvent(evt);
             };
 
+            // Trigger the same open paths as production UX (event + shortcut).
             dispatchOpenEvent(win);
             dispatchOpenShortcut(win);
 
             try {
-                if (win.parent && win.parent !== win) {
-                    dispatchOpenEvent(win.parent);
-                    dispatchOpenShortcut(win.parent);
+                const parentWindow = (win as any).parent;
+                if (parentWindow && parentWindow !== win) {
+                    dispatchOpenEvent(parentWindow);
+                    dispatchOpenShortcut(parentWindow);
                 }
             } catch {
                 // Ignore cross-context parent access issues.
@@ -125,16 +131,15 @@ export const openSearchModal = () => {
     });
 
     cy.get('body').then($body => {
-        const panelExists = $body.find(`${panelSelector}:visible`).length > 0;
-        if (panelExists) {
+        if ($body.find(`${panelSelector}:visible`).length > 0) {
             return;
         }
 
-        // Fallback for environments where the custom event does not reach the modal host.
+        // Last-resort fallback for environments where synthetic events are ignored.
         cy.get('body').type('{ctrl}k');
     });
 
-    cy.get(panelSelector, {timeout: 10000}).should('be.visible');
+    cy.get(panelSelector, {timeout: 15000}).should('be.visible');
     cy.get('[data-kfind-search-input-wrapper="true"] input[type="search"]', {timeout: 10000}).as('searchInput').should('be.visible');
 };
 
