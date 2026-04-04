@@ -106,6 +106,7 @@ export const KFindModal = () => {
                   "Report bugs and improvements at",
                 )}{" "}
                 <a
+                  className={s.issueLink}
                   href="https://github.com/Jahia/kfind/issues"
                   target="_blank"
                   rel="noreferrer"
