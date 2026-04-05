@@ -6,6 +6,8 @@
 // filter blocks those calls with HTTP 200 + "Permission denied".
 // ---------------------------------------------------------------------------
 
+import {createSite, enableModule} from '@jahia/cypress';
+
 const ADD_NODE_MUTATION = `
 mutation addNode($parentPathOrId: String!, $name: String!, $primaryNodeType: String!, $properties: [InputJCRProperty], $mixins: [String]) {
     jcr(workspace: EDIT) {
@@ -40,6 +42,8 @@ query getNodeByPath($path: String!) {
     }
 }`;
 
+const KFIND_CONFIG_PID = 'org.jahia.pm.modules.kfind';
+
 // ---------------------------------------------------------------------------
 // Low-level helpers
 // ---------------------------------------------------------------------------
@@ -52,6 +56,31 @@ type GraphQLResult = {
         } | null;
     } | null;
     errors?: unknown;
+};
+
+const formatGraphQLErrors = (errors: unknown) => {
+    try {
+        return JSON.stringify(errors, null, 2);
+    } catch {
+        return String(errors);
+    }
+};
+
+const assertNoGraphQLErrors = (result: GraphQLResult, context: string) => {
+    if (result.errors !== undefined) {
+        throw new Error(`${context}: ${formatGraphQLErrors(result.errors)}`);
+    }
+};
+
+const hasPathNotFoundError = (errors: unknown) => {
+    if (!Array.isArray(errors)) {
+        return false;
+    }
+
+    return errors.some(error => {
+        const message = (error as {message?: unknown})?.message;
+        return typeof message === 'string' && message.includes('PathNotFoundException');
+    });
 };
 
 const gqlRequest = (body: Record<string, unknown>): Cypress.Chainable<any> =>
@@ -78,11 +107,107 @@ const addNode = (variables: {
 
 const getNodeByPath = (path: string) => gqlRequest({query: GET_NODE_BY_PATH_QUERY, variables: {path}});
 
+const waitForNodeByPath = (path: string, timeoutMs = 10000, intervalMs = 2000) => {
+    const startedAt = Date.now();
+
+    const poll = (): Cypress.Chainable =>
+        getNodeByPath(path).then((result: GraphQLResult) => {
+            if (result.errors !== undefined && !hasPathNotFoundError(result.errors)) {
+                assertNoGraphQLErrors(result, `GraphQL errors while waiting for node ${path}`);
+            }
+
+            if (result?.data?.jcr?.nodeByPath?.uuid) {
+                return cy.wrap(null, {log: false});
+            }
+
+            const elapsedMs = Date.now() - startedAt;
+            if (elapsedMs >= timeoutMs) {
+                throw new Error(`Timed out after ${timeoutMs}ms waiting for node: ${path}`);
+            }
+
+            cy.log(`[kfind-setup] Waiting for node ${path} (${Math.floor(elapsedMs / 1000)}s)`);
+            return cy.wait(intervalMs, {log: false}).then(() => poll());
+        });
+
+    return poll();
+};
+
+// Jahia admin configuration mutation expects values as strings, even for
+// numeric/boolean settings (e.g. value: "2").
+const toGraphqlConfigValueLiteral = (value: string | number | boolean) => JSON.stringify(String(value));
+
+const buildKfindConfigMutation = (values: Record<string, string | number | boolean>) => {
+    const fields = Object.entries(values)
+        .map(
+            ([name, value]) => `${name}:value(name:${JSON.stringify(name)},value:${toGraphqlConfigValueLiteral(value)})`
+        )
+        .join('\n');
+
+    return `
+mutation {
+    admin {
+        jahia {
+            configuration(pid:${JSON.stringify(KFIND_CONFIG_PID)}) {
+                ${fields}
+            }
+        }
+    }
+}`;
+};
+
+export const updateKfindConfigurationViaGraphql = (values: Record<string, string | number | boolean>) => {
+    const mutation = buildKfindConfigMutation(values);
+
+    return gqlRequest({query: mutation}).then(result => {
+        assertNoGraphQLErrors(result, 'GraphQL errors while updating kfind configuration');
+        return result;
+    });
+};
+
 // ---------------------------------------------------------------------------
 // Shared test site key
 // ---------------------------------------------------------------------------
 
 export const SITE_KEY = 'kfind-test-site';
+
+let didEnsureSharedSite = false;
+
+export const ensureSiteExists = (siteKey: string = SITE_KEY) =>
+    cy.then(() => {
+        const sitePath = `/sites/${siteKey}`;
+
+        if (didEnsureSharedSite) {
+            return;
+        }
+
+        return getNodeByPath(sitePath).then((result: GraphQLResult) => {
+            if (result.errors !== undefined && !hasPathNotFoundError(result.errors)) {
+                assertNoGraphQLErrors(result, 'GraphQL errors while checking site existence');
+            }
+
+            if (result?.data?.jcr?.nodeByPath?.uuid) {
+                enableModule('kfind', siteKey);
+                didEnsureSharedSite = true;
+                cy.log(`[kfind-setup] Reusing existing site: ${siteKey}`);
+                return;
+            }
+
+            cy.log(`[kfind-setup] Site ${siteKey} is missing, creating it`);
+            createSite(siteKey, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
+            enableModule('kfind', siteKey);
+
+            return waitForNodeByPath(sitePath).then(() => {
+                didEnsureSharedSite = true;
+                cy.log(`[kfind-setup] Site is ready: ${siteKey}`);
+            });
+        });
+    });
+
+export const visitKfindSiteInJContent = (siteKey: string = SITE_KEY) => {
+    return ensureSiteExists(siteKey).then(() => {
+        cy.visitJContentPage(siteKey);
+    });
+};
 
 const pad2 = (value: number) => value.toString().padStart(2, '0');
 
@@ -200,31 +325,33 @@ export const createPageViaGraphql = (siteKey: string, pageName: string, pageTitl
                     {name: 'j:templateName', value: 'base'}
                 ]
             }).then((createResult: GraphQLResult) => {
-                expect(createResult.errors, 'GraphQL errors while creating home page').to.be.undefined;
+                assertNoGraphQLErrors(createResult, 'GraphQL errors while creating home page');
             });
         });
 
-    return ensureHomePage().then(() =>
-        addNode({
-            parentPathOrId: `/sites/${siteKey}/home`,
-            name: pageName,
-            primaryNodeType: 'jnt:page',
-            properties: [
-                {
-                    name: 'jcr:title',
-                    language: 'en',
-                    value: pageTitle
-                },
-                {
-                    name: 'j:templateName',
-                    value: 'base'
-                }
-            ]
-        }).then((result: GraphQLResult) => {
-            expect(result.errors, 'GraphQL errors while creating page').to.be.undefined;
-            expect(result?.data?.jcr?.addNode?.uuid, 'created page uuid').to.be.a('string');
-            return result;
-        })
+    return ensureSiteExists(siteKey).then(() =>
+        ensureHomePage().then(() =>
+            addNode({
+                parentPathOrId: `/sites/${siteKey}/home`,
+                name: pageName,
+                primaryNodeType: 'jnt:page',
+                properties: [
+                    {
+                        name: 'jcr:title',
+                        language: 'en',
+                        value: pageTitle
+                    },
+                    {
+                        name: 'j:templateName',
+                        value: 'base'
+                    }
+                ]
+            }).then((result: GraphQLResult) => {
+                assertNoGraphQLErrors(result, 'GraphQL errors while creating page');
+                expect(result?.data?.jcr?.addNode?.uuid, 'created page uuid').to.be.a('string');
+                return result;
+            })
+        )
     );
 };
 
@@ -252,7 +379,7 @@ const ensureMediaRoot = (siteKey: string) => {
                 }
             ]
         }).then((createResult: GraphQLResult) => {
-            expect(createResult.errors, 'GraphQL errors while creating /files').to.be.undefined;
+            assertNoGraphQLErrors(createResult, 'GraphQL errors while creating /files');
         });
     });
 };
@@ -306,12 +433,14 @@ const uploadFile = (parentPathOrId: string, name: string): Cypress.Chainable<any
 };
 
 export const createMediaViaGraphql = (siteKey: string, fileName: string) =>
-    ensureMediaRoot(siteKey).then(() =>
-        uploadFile(`/sites/${siteKey}/files`, fileName).then((result: GraphQLResult) => {
-            expect(result.errors, 'GraphQL errors while creating media').to.be.undefined;
-            expect(result?.data?.jcr?.addNode?.uuid, 'created media uuid').to.be.a('string');
-            return result;
-        })
+    ensureSiteExists(siteKey).then(() =>
+        ensureMediaRoot(siteKey).then(() =>
+            uploadFile(`/sites/${siteKey}/files`, fileName).then((result: GraphQLResult) => {
+                assertNoGraphQLErrors(result, 'GraphQL errors while creating media');
+                expect(result?.data?.jcr?.addNode?.uuid, 'created media uuid').to.be.a('string');
+                return result;
+            })
+        )
     );
 
 // kfindtest:mainResource (defined in the kfind-test-module CND) extends
@@ -319,19 +448,21 @@ export const createMediaViaGraphql = (siteKey: string, fileName: string) =>
 // — only under jnt:page (e.g. /home). The kfind main-resources provider
 // searches site-wide via pathType: ANCESTOR, so location doesn't affect results.
 export const createMainResourceViaGraphql = (siteKey: string, nodeName: string, title: string) =>
-    addNode({
-        parentPathOrId: `/sites/${siteKey}/home`,
-        name: nodeName,
-        primaryNodeType: 'kfindtest:mainResource',
-        properties: [
-            {
-                name: 'jcr:title',
-                language: 'en',
-                value: title
-            }
-        ]
-    }).then((result: GraphQLResult) => {
-        expect(result.errors, 'GraphQL errors while creating main resource').to.be.undefined;
-        expect(result?.data?.jcr?.addNode?.uuid, 'created main resource uuid').to.be.a('string');
-        return result;
-    });
+    ensureSiteExists(siteKey).then(() =>
+        addNode({
+            parentPathOrId: `/sites/${siteKey}/home`,
+            name: nodeName,
+            primaryNodeType: 'kfindtest:mainResource',
+            properties: [
+                {
+                    name: 'jcr:title',
+                    language: 'en',
+                    value: title
+                }
+            ]
+        }).then((result: GraphQLResult) => {
+            assertNoGraphQLErrors(result, 'GraphQL errors while creating main resource');
+            expect(result?.data?.jcr?.addNode?.uuid, 'created main resource uuid').to.be.a('string');
+            return result;
+        })
+    );

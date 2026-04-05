@@ -1,4 +1,10 @@
-import {createMediaViaGraphql, createTestToken, searchInModal, SITE_KEY} from './kfindProviders.helpers';
+import {
+    createMediaViaGraphql,
+    createTestToken,
+    searchInModal,
+    SITE_KEY,
+    visitKfindSiteInJContent
+} from './kfindProviders.helpers';
 
 describe('kFind media provider', () => {
     const token = createTestToken();
@@ -12,7 +18,7 @@ describe('kFind media provider', () => {
     });
 
     beforeEach(() => {
-        cy.visitJContentPage(SITE_KEY);
+        visitKfindSiteInJContent(SITE_KEY);
     });
 
     afterEach(() => {

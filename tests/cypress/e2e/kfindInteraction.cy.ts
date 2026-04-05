@@ -1,4 +1,10 @@
-import {createPageViaGraphql, createTestToken, searchInModal, SITE_KEY} from './kfindProviders.helpers';
+import {
+    createPageViaGraphql,
+    createTestToken,
+    searchInModal,
+    SITE_KEY,
+    visitKfindSiteInJContent
+} from './kfindProviders.helpers';
 
 const RESULT_ROW_SELECTOR = '[data-kfind-result-row="true"][tabindex]';
 const SEARCH_INPUT_SELECTOR = '[data-kfind-search-input-wrapper="true"] input[type="search"]';
@@ -13,7 +19,7 @@ describe('kFind keyboard interaction', () => {
     });
 
     beforeEach(() => {
-        cy.visitJContentPage(SITE_KEY);
+        visitKfindSiteInJContent(SITE_KEY);
     });
 
     afterEach(() => {

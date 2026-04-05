@@ -1,10 +1,19 @@
-import {createPageViaGraphql, createTestToken, searchInModal, SITE_KEY} from './kfindProviders.helpers';
+import {
+    createMediaViaGraphql,
+    createPageViaGraphql,
+    createTestToken,
+    searchInModal,
+    SITE_KEY,
+    visitKfindSiteInJContent
+} from './kfindProviders.helpers';
 
 const RESULT_ROW_SELECTOR = '[data-kfind-result-row="true"][tabindex]';
 const SHOW_MORE_SELECTOR = '[data-kfind-show-more="true"]';
 
 describe('kFind pagination behavior', () => {
     const token = createTestToken();
+    const providerOrderQuery = `page models order ${token}`;
+    const staleNoMatchQuery = `kfind-stale-no-match-${token}`;
 
     before('Seed many pages', () => {
         cy.login();
@@ -15,10 +24,13 @@ describe('kFind pagination behavior', () => {
                 `kfind pagination ${token} item ${index}`
             );
         });
+
+        createPageViaGraphql(SITE_KEY, `kfind-provider-order-${token}`, `page models order ${token} page`);
+        createMediaViaGraphql(SITE_KEY, `page-models-order-${token}.txt`);
     });
 
     beforeEach(() => {
-        cy.visitJContentPage(SITE_KEY);
+        visitKfindSiteInJContent(SITE_KEY);
     });
 
     afterEach(() => {
@@ -95,5 +107,63 @@ describe('kFind pagination behavior', () => {
         cy.focused().type('e');
 
         cy.get('@editSpy').should('have.been.calledOnce');
+    });
+
+    it('supports Enter to navigate from a focused result row and closes the modal', () => {
+        searchInModal(`kfind pagination ${token}`);
+
+        cy.get(RESULT_ROW_SELECTOR, {timeout: 2000}).first().focus();
+        cy.focused().should('match', RESULT_ROW_SELECTOR);
+        cy.realPress('Enter');
+
+        cy.get('[data-kfind-modal="true"]').should('not.be.visible');
+    });
+
+    it('keeps only the latest query results when a previous request resolves late', () => {
+        cy.intercept('POST', '**/modules/graphql', req => {
+            const searchTerm = req.body?.variables?.searchTerm;
+
+            if (searchTerm === `kfind pagination ${token}`) {
+                req.alias = 'staleSearch';
+                req.on('response', response => {
+                    response.setDelay(1200);
+                });
+            }
+
+            if (searchTerm === staleNoMatchQuery) {
+                req.alias = 'latestSearch';
+            }
+        });
+
+        searchInModal(`kfind pagination ${token}`);
+        cy.get('@searchInput').clear();
+        cy.get('@searchInput').type(staleNoMatchQuery);
+
+        cy.wait('@latestSearch');
+        cy.wait('@staleSearch');
+
+        cy.get('[data-kfind-empty-state="no-results"]', {timeout: 3000}).should('be.visible');
+        cy.get('[data-kfind-panel="true"]').should('not.contain', `kfind pagination ${token}`);
+    });
+
+    it('renders provider sections in priority order for a shared query', () => {
+        searchInModal(providerOrderQuery);
+
+        cy.get('[data-kfind-results-section-key]', {timeout: 4000}).should($sections => {
+            const sectionKeys = Array.from($sections, section =>
+                section.getAttribute('data-kfind-results-section-key')
+            );
+
+            expect(sectionKeys).to.include('kfind-features');
+            expect(sectionKeys).to.include('kfind-jcr-media');
+            expect(sectionKeys).to.include('kfind-jcr-pages');
+
+            const featuresIndex = sectionKeys.indexOf('kfind-features');
+            const mediaIndex = sectionKeys.indexOf('kfind-jcr-media');
+            const pagesIndex = sectionKeys.indexOf('kfind-jcr-pages');
+
+            expect(featuresIndex).to.be.lessThan(mediaIndex);
+            expect(mediaIndex).to.be.lessThan(pagesIndex);
+        });
     });
 });

@@ -331,6 +331,7 @@ export const useSearchOrchestration = (
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
+      debounceRef.current = null;
     }
 
     if (searchValue.trim().length < getMinSearchChars()) {
@@ -342,12 +343,14 @@ export const useSearchOrchestration = (
     triggerAvailabilityChecks();
 
     debounceRef.current = setTimeout(() => {
+      debounceRef.current = null;
       executeSearchRef.current(searchValue);
     }, getDebounceDelay());
 
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
+        debounceRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

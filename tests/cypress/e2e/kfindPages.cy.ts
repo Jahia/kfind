@@ -1,4 +1,10 @@
-import {createPageViaGraphql, createTestToken, searchInModal, SITE_KEY} from './kfindProviders.helpers';
+import {
+    createPageViaGraphql,
+    createTestToken,
+    searchInModal,
+    SITE_KEY,
+    visitKfindSiteInJContent
+} from './kfindProviders.helpers';
 
 describe('kFind pages provider', () => {
     const token = createTestToken();
@@ -12,7 +18,7 @@ describe('kFind pages provider', () => {
     });
 
     beforeEach(() => {
-        cy.visitJContentPage(SITE_KEY);
+        visitKfindSiteInJContent(SITE_KEY);
     });
 
     afterEach(() => {
