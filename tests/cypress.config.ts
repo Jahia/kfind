@@ -23,6 +23,7 @@ export default defineConfig({
         specPattern: [
             'cypress/e2e/kfind0Setup.cy.ts',
             'cypress/e2e/kfindEdgeCases.cy.ts',
+            'cypress/e2e/kfindUrlReverseLookup.cy.ts',
             'cypress/e2e/kfindFeatures.cy.ts',
             'cypress/e2e/kfindMainResources.cy.ts',
             'cypress/e2e/kfindMedia.cy.ts',
@@ -32,6 +33,6 @@ export default defineConfig({
             'cypress/e2e/kfindZTeardown.cy.ts'
         ],
         excludeSpecPattern: '*.ignore.ts',
-        baseUrl: process.env.CYPRESS_BASE_URL || 'http://localhost:8080'
+        baseUrl: process.env.CYPRESS_BASE_URL || process.env.JAHIA_URL || 'http://localhost:8080'
     }
 });

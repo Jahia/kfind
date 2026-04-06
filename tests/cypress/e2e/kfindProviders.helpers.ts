@@ -6,7 +6,7 @@
 // filter blocks those calls with HTTP 200 + "Permission denied".
 // ---------------------------------------------------------------------------
 
-import {createSite, enableModule} from '@jahia/cypress';
+import {createSite, editSite, enableModule} from '@jahia/cypress';
 
 // ---------------------------------------------------------------------------
 // Shared timeout constants
@@ -58,6 +58,76 @@ query getNodeByPath($path: String!) {
 
 const KFIND_CONFIG_PID = 'org.jahia.pm.modules.kfind';
 
+const LOCALHOST_BASE_URL = 'http://localhost:8080';
+
+const asNonEmptyString = (value: unknown): string | undefined => {
+    if (typeof value !== 'string') {
+        return undefined;
+    }
+
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const stripTrailingSlashes = (url: string) => url.replace(/\/+$/, '');
+
+const safeParseHostname = (url: string): string | undefined => {
+    try {
+        return new URL(url).hostname || undefined;
+    } catch {
+        return undefined;
+    }
+};
+
+const resolveRuntimeBaseUrl = () => {
+    const configuredBaseUrl = asNonEmptyString(Cypress.config('baseUrl'));
+    const explicitBaseUrl = asNonEmptyString(Cypress.env('CYPRESS_BASE_URL'));
+    const jahiaUrl = asNonEmptyString(Cypress.env('JAHIA_URL'));
+
+    return stripTrailingSlashes(configuredBaseUrl || explicitBaseUrl || jahiaUrl || LOCALHOST_BASE_URL);
+};
+
+const resolveSiteServerName = () => {
+    const explicitServerName = asNonEmptyString(Cypress.env('KFIND_SITE_SERVER_NAME'));
+    if (explicitServerName) {
+        return explicitServerName;
+    }
+
+    return safeParseHostname(resolveRuntimeBaseUrl()) || 'localhost';
+};
+
+const resolveVanityBaseUrl = () => {
+    const explicitVanityBaseUrl = asNonEmptyString(Cypress.env('KFIND_VANITY_BASE_URL'));
+    if (explicitVanityBaseUrl) {
+        return stripTrailingSlashes(explicitVanityBaseUrl);
+    }
+
+    return stripTrailingSlashes(asNonEmptyString(Cypress.env('JAHIA_URL')) || resolveRuntimeBaseUrl());
+};
+
+export const getKfindTestRuntimeConfig = () => {
+    const baseUrl = resolveRuntimeBaseUrl();
+    const siteServerName = resolveSiteServerName();
+    const vanityBaseUrl = resolveVanityBaseUrl();
+
+    return {
+        baseUrl,
+        siteServerName,
+        vanityBaseUrl
+    };
+};
+
+export const isJahiaVanityHostnameStrategy = () => {
+    const {vanityBaseUrl} = getKfindTestRuntimeConfig();
+    return safeParseHostname(vanityBaseUrl) === 'jahia';
+};
+
+export const buildVanityLookupUrl = (pathOrSlug: string) => {
+    const {vanityBaseUrl} = getKfindTestRuntimeConfig();
+    const normalizedPath = pathOrSlug.startsWith('/') ? pathOrSlug : `/${pathOrSlug}`;
+    return `${vanityBaseUrl}${normalizedPath}`;
+};
+
 // ---------------------------------------------------------------------------
 // Low-level helpers
 // ---------------------------------------------------------------------------
@@ -99,7 +169,7 @@ const hasPathNotFoundError = (errors: unknown) => {
 
 const gqlRequest = (body: Record<string, unknown>): Cypress.Chainable<GraphQLResult> =>
     cy
-        .request<GraphQLResult>({
+        .request({
             method: 'POST',
             url: '/modules/graphql',
             headers: {
@@ -109,7 +179,9 @@ const gqlRequest = (body: Record<string, unknown>): Cypress.Chainable<GraphQLRes
             auth: GQL_AUTH(),
             body
         })
-        .then(response => response.body);
+        .then(
+            (response: Cypress.Response<unknown>) => response.body as GraphQLResult
+        ) as unknown as Cypress.Chainable<GraphQLResult>;
 
 const addNode = (variables: {
     parentPathOrId: string;
@@ -181,6 +253,7 @@ const ensuredSites = new Set<string>();
 export const ensureSiteExists = (siteKey: string = SITE_KEY) =>
     cy.then(() => {
         const sitePath = `/sites/${siteKey}`;
+        const runtimeConfig = getKfindTestRuntimeConfig();
 
         if (ensuredSites.has(siteKey)) {
             return;
@@ -199,7 +272,15 @@ export const ensureSiteExists = (siteKey: string = SITE_KEY) =>
             }
 
             cy.log(`[kfind-setup] Site ${siteKey} is missing, creating it`);
-            createSite(siteKey, {locale: 'en', serverName: 'localhost', templateSet: 'kfind-test-module'});
+            cy.log(
+                `[kfind-setup] baseUrl=${runtimeConfig.baseUrl} serverName=${runtimeConfig.siteServerName} vanityBaseUrl=${runtimeConfig.vanityBaseUrl}`
+            );
+
+            createSite(siteKey, {
+                locale: 'en',
+                serverName: runtimeConfig.siteServerName,
+                templateSet: 'kfind-test-module'
+            });
             enableModule('kfind', siteKey);
 
             return waitForNodeByPath(sitePath).then(() => {
@@ -214,6 +295,13 @@ export const visitKfindSiteInJContent = (siteKey: string = SITE_KEY) => {
         cy.visitJContentPage(siteKey);
     });
 };
+
+export const setSiteServerName = (serverName: string, siteKey: string = SITE_KEY) =>
+    cy.then(() => {
+        cy.log(`[kfind-setup] Updating site ${siteKey} serverName to ${serverName}`);
+        editSite(siteKey, {serverName});
+        ensuredSites.delete(siteKey);
+    });
 
 const pad2 = (value: number) => value.toString().padStart(2, '0');
 
@@ -430,7 +518,7 @@ const uploadFile = (parentPathOrId: string, name: string): Cypress.Chainable<Gra
     ].join('\r\n');
 
     return cy
-        .request<GraphQLResult>({
+        .request({
             method: 'POST',
             url: '/modules/graphql',
             headers: {
@@ -440,7 +528,9 @@ const uploadFile = (parentPathOrId: string, name: string): Cypress.Chainable<Gra
             auth: GQL_AUTH(),
             body
         })
-        .then(response => response.body);
+        .then(
+            (response: Cypress.Response<unknown>) => response.body as GraphQLResult
+        ) as unknown as Cypress.Chainable<GraphQLResult>;
 };
 
 export const createMediaViaGraphql = (siteKey: string, fileName: string) =>

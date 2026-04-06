@@ -12,13 +12,10 @@ import {
 describe('kFind edge cases and shortcuts', () => {
     const token = createTestToken();
     const pageTitle = `kfind edge title ${token}`;
-    const urlLookupPageName = `kfind-url-lookup-${token}`;
-    const urlLookupTitle = `kfind url lookup ${token}`;
 
     before('Seed content', () => {
         cy.login();
         createPageViaGraphql(SITE_KEY, `kfind-edge-page-${token}`, pageTitle);
-        createPageViaGraphql(SITE_KEY, urlLookupPageName, urlLookupTitle);
     });
 
     beforeEach(function () {
