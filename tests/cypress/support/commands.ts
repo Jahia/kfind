@@ -4,6 +4,8 @@
 
 import 'cypress-wait-until';
 
+// Augment Cypress's global Chainable type so TypeScript recognizes
+// custom commands added in this file (e.g. cy.visitJContentPage()).
 declare global {
     namespace Cypress {
         interface Chainable {
