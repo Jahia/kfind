@@ -5,7 +5,7 @@
         "allowSyntheticDefaultImports": true,
         "noEmit": false,
         "isolatedModules": false,
-        "types": ["cypress", "node", "@jahia/cypress", "cypress-real-events"],
+        "types": ["cypress", "node", "@jahia/cypress", "cypress-real-events", "cypress-wait-until"],
         "lib": ["es2015"]
     }
 }

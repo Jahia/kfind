@@ -1,6 +1,7 @@
 import {
     createPageViaGraphql,
     createTestToken,
+    MEDIUM_TIMEOUT,
     openSearchModal,
     searchInModal,
     SITE_KEY,
@@ -37,22 +38,22 @@ describe('kFind edge cases and shortcuts', () => {
     it('shows global no-results state for an unknown query', () => {
         searchInModal('kfind-edge-no-match-xyz');
 
-        cy.get('[data-kfind-panel="true"]').contains('No results', {timeout: 2000});
+        cy.get('[data-kfind-panel="true"]').contains('No results', {timeout: MEDIUM_TIMEOUT});
     });
 
     it('keeps the modal responsive for special-character queries', () => {
         const specialQuery = '"/sites/test?x=1&y=2"';
         searchInModal(specialQuery);
 
-        cy.get('[data-kfind-panel="true"]', {timeout: 2000}).should('be.visible');
+        cy.get('[data-kfind-panel="true"]', {timeout: MEDIUM_TIMEOUT}).should('be.visible');
         cy.get('@searchInput').should('have.value', specialQuery);
     });
 
     it('matches page results with case-insensitive query', () => {
         searchInModal(pageTitle.toUpperCase());
 
-        cy.get('[data-kfind-panel="true"]').contains('Pages', {timeout: 2000});
-        cy.get('[data-kfind-panel="true"]').contains(pageTitle, {timeout: 2000});
+        cy.get('[data-kfind-panel="true"]').contains('Pages', {timeout: MEDIUM_TIMEOUT});
+        cy.get('[data-kfind-panel="true"]').contains(pageTitle, {timeout: MEDIUM_TIMEOUT});
     });
 
     it('closes the modal when pressing Escape', () => {
@@ -69,7 +70,7 @@ describe('kFind edge cases and shortcuts', () => {
         cy.get('[data-kfind-panel="true"]').should('not.exist');
 
         cy.get('body').type('{ctrl}k');
-        cy.get('[data-kfind-panel="true"]', {timeout: 2000}).should('be.visible');
+        cy.get('[data-kfind-panel="true"]', {timeout: MEDIUM_TIMEOUT}).should('be.visible');
     });
 
     it('does not trigger search below min chars and starts searching at min chars', () => {
@@ -83,7 +84,7 @@ describe('kFind edge cases and shortcuts', () => {
 
         cy.get('@searchInput').clear();
         cy.get('@searchInput').type('ab');
-        cy.get('[data-kfind-empty-state="hint"]', {timeout: 2000}).should('be.visible');
+        cy.get('[data-kfind-empty-state="hint"]', {timeout: MEDIUM_TIMEOUT}).should('be.visible');
 
         cy.get('@searchInput').clear();
         cy.get('@searchInput').type('abc');

@@ -1,6 +1,7 @@
 import {
     createPageViaGraphql,
     createTestToken,
+    MEDIUM_TIMEOUT,
     searchInModal,
     SITE_KEY,
     visitKfindSiteInJContent
@@ -28,14 +29,14 @@ describe('kFind pages provider', () => {
     it('finds a page created via GraphQL', () => {
         searchInModal(exactTitle);
 
-        cy.get('[data-kfind-panel="true"]').contains('Pages', {timeout: 2000});
-        cy.get('[data-kfind-panel="true"]').contains(exactTitle, {timeout: 2000});
+        cy.get('[data-kfind-panel="true"]').contains('Pages', {timeout: MEDIUM_TIMEOUT});
+        cy.get('[data-kfind-panel="true"]').contains(exactTitle, {timeout: MEDIUM_TIMEOUT});
     });
 
     it('filters page results by query term', () => {
         searchInModal(`exact ${token}`);
 
-        cy.get('[data-kfind-panel="true"]').contains(exactTitle, {timeout: 2000});
+        cy.get('[data-kfind-panel="true"]').contains(exactTitle, {timeout: MEDIUM_TIMEOUT});
         cy.get('[data-kfind-panel="true"]').should('not.contain', broaderTitle);
     });
 });

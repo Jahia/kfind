@@ -1,4 +1,10 @@
-import {searchInModal, updateKfindConfigurationViaGraphql, visitKfindSiteInJContent} from './kfindProviders.helpers';
+import {
+    MEDIUM_TIMEOUT,
+    searchInModal,
+    SITE_KEY,
+    updateKfindConfigurationViaGraphql,
+    visitKfindSiteInJContent
+} from './kfindProviders.helpers';
 
 describe('kFind features provider', () => {
     const setFeaturesProviderEnabled = (enabled: boolean) => {
@@ -8,7 +14,7 @@ describe('kFind features provider', () => {
     };
 
     beforeEach(() => {
-        visitKfindSiteInJContent();
+        visitKfindSiteInJContent(SITE_KEY);
     });
 
     afterEach(() => {
@@ -18,14 +24,14 @@ describe('kFind features provider', () => {
     it('returns feature results for page models query', () => {
         searchInModal('page models');
 
-        cy.get('[data-kfind-panel="true"]').contains('Features', {timeout: 2000});
-        cy.get('[data-kfind-panel="true"]').contains(/page\s*models/i, {timeout: 2000});
+        cy.get('[data-kfind-panel="true"]').contains('Features', {timeout: MEDIUM_TIMEOUT});
+        cy.get('[data-kfind-panel="true"]').contains(/page\s*models/i, {timeout: MEDIUM_TIMEOUT});
     });
 
     it('does not return feature results for unknown query', () => {
         searchInModal('kfind-feature-no-match-xyz');
 
-        cy.get('[data-kfind-empty-state="no-results"]', {timeout: 2000}).should('be.visible');
+        cy.get('[data-kfind-empty-state="no-results"]', {timeout: MEDIUM_TIMEOUT}).should('be.visible');
         cy.get('[data-kfind-panel="true"]').should('not.contain', 'Features');
     });
 
@@ -41,6 +47,6 @@ describe('kFind features provider', () => {
         setFeaturesProviderEnabled(true);
         searchInModal('page models');
 
-        cy.get('[data-kfind-results-section-key="kfind-features"]', {timeout: 2000}).should('be.visible');
+        cy.get('[data-kfind-results-section-key="kfind-features"]', {timeout: MEDIUM_TIMEOUT}).should('be.visible');
     });
 });

@@ -1635,7 +1635,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jahia/moonstone@npm:^2.17.5":
+"@jahia/moonstone@npm:^2.17.4":
   version: 2.17.5
   resolution: "@jahia/moonstone@npm:2.17.5"
   dependencies:
@@ -4890,7 +4890,7 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:^3.11.0"
     "@jahia/eslint-config": "npm:^2.2.0"
-    "@jahia/moonstone": "npm:^2.17.5"
+    "@jahia/moonstone": "npm:^2.17.4"
     "@jahia/ui-extender": "npm:^1.2.0"
     "@jahia/vite-federation-plugin": "npm:^0.1.1"
     "@types/prop-types": "npm:^15"

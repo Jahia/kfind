@@ -36,7 +36,7 @@
       "title": "Main Resource (Full page content)"
     },
     "urlReverseLookup": {
-      "title": "Direct URL match"
+      "title": "URL or path match"
     },
     "features": {
       "title": "Features",

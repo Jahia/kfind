@@ -2,6 +2,7 @@ import {
     createMediaViaGraphql,
     createPageViaGraphql,
     createTestToken,
+    MEDIUM_TIMEOUT,
     searchInModal,
     SITE_KEY,
     visitKfindSiteInJContent
@@ -40,36 +41,38 @@ describe('kFind pagination behavior', () => {
     it('shows a Show more button when a section has additional results', () => {
         searchInModal(`kfind pagination ${token}`);
 
-        cy.get('[data-kfind-panel="true"]').contains('Pages', {timeout: 2000});
-        cy.get(SHOW_MORE_SELECTOR, {timeout: 2000}).first().should('be.visible');
+        cy.get('[data-kfind-panel="true"]').contains('Pages', {timeout: MEDIUM_TIMEOUT});
+        cy.get(SHOW_MORE_SELECTOR, {timeout: MEDIUM_TIMEOUT}).first().should('be.visible');
     });
 
     it('loads more results after clicking Show more', () => {
         searchInModal(`kfind pagination ${token}`);
 
-        cy.get(RESULT_ROW_SELECTOR, {timeout: 2000})
+        cy.get(RESULT_ROW_SELECTOR, {timeout: MEDIUM_TIMEOUT})
             .its('length')
             .then(initialCount => {
                 const countBefore = Number(initialCount);
                 expect(countBefore).to.be.greaterThan(0);
 
-                cy.get(SHOW_MORE_SELECTOR, {timeout: 2000}).first().click();
+                cy.get(SHOW_MORE_SELECTOR, {timeout: MEDIUM_TIMEOUT}).first().click();
 
-                cy.get(RESULT_ROW_SELECTOR, {timeout: 2000}).its('length').should('be.greaterThan', countBefore);
+                cy.get(RESULT_ROW_SELECTOR, {timeout: MEDIUM_TIMEOUT})
+                    .its('length')
+                    .should('be.greaterThan', countBefore);
             });
     });
 
     it('supports Tab then Enter to load more results from keyboard', () => {
         searchInModal(`kfind pagination ${token}`);
 
-        cy.get(SHOW_MORE_SELECTOR, {timeout: 2000}).first().should('be.visible');
-        cy.get(RESULT_ROW_SELECTOR, {timeout: 2000})
+        cy.get(SHOW_MORE_SELECTOR, {timeout: MEDIUM_TIMEOUT}).first().should('be.visible');
+        cy.get(RESULT_ROW_SELECTOR, {timeout: MEDIUM_TIMEOUT})
             .its('length')
             .then(initialCount => {
                 const countBefore = Number(initialCount);
                 expect(countBefore).to.be.greaterThan(0);
 
-                cy.get(RESULT_ROW_SELECTOR, {timeout: 2000}).first().focus();
+                cy.get(RESULT_ROW_SELECTOR, {timeout: MEDIUM_TIMEOUT}).first().focus();
                 for (let i = 0; i < countBefore; i += 1) {
                     cy.realPress('Tab');
                 }
@@ -77,7 +80,9 @@ describe('kFind pagination behavior', () => {
                 cy.focused().should('match', SHOW_MORE_SELECTOR);
                 cy.realPress('Enter');
 
-                cy.get(RESULT_ROW_SELECTOR, {timeout: 2000}).its('length').should('be.greaterThan', countBefore);
+                cy.get(RESULT_ROW_SELECTOR, {timeout: MEDIUM_TIMEOUT})
+                    .its('length')
+                    .should('be.greaterThan', countBefore);
             });
     });
 
@@ -103,7 +108,7 @@ describe('kFind pagination behavior', () => {
             cy.spy(parentWindow.CE_API, 'edit').as('editSpy');
         });
 
-        cy.get(RESULT_ROW_SELECTOR, {timeout: 2000}).first().focus();
+        cy.get(RESULT_ROW_SELECTOR, {timeout: MEDIUM_TIMEOUT}).first().focus();
         cy.focused().type('e');
 
         cy.get('@editSpy').should('have.been.calledOnce');
@@ -112,7 +117,7 @@ describe('kFind pagination behavior', () => {
     it('supports Enter to navigate from a focused result row and closes the modal', () => {
         searchInModal(`kfind pagination ${token}`);
 
-        cy.get(RESULT_ROW_SELECTOR, {timeout: 2000}).first().focus();
+        cy.get(RESULT_ROW_SELECTOR, {timeout: MEDIUM_TIMEOUT}).first().focus();
         cy.focused().should('match', RESULT_ROW_SELECTOR);
         cy.realPress('Enter');
 

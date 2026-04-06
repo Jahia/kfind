@@ -1,4 +1,15 @@
 .section {
+  margin-bottom: var(--spacing-medium);
   margin-top: var(--spacing-small);
   padding-left: 6px;
+}
+
+.resultsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.showMoreButton {
+  width: 100%;
 }

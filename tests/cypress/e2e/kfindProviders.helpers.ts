@@ -8,6 +8,14 @@
 
 import {createSite, enableModule} from '@jahia/cypress';
 
+// ---------------------------------------------------------------------------
+// Shared timeout constants
+// ---------------------------------------------------------------------------
+
+export const SHORT_TIMEOUT = 1000;
+export const MEDIUM_TIMEOUT = 2000;
+export const LONG_TIMEOUT = 10000;
+
 const ADD_NODE_MUTATION = `
 mutation addNode($parentPathOrId: String!, $name: String!, $primaryNodeType: String!, $properties: [InputJCRProperty], $mixins: [String]) {
     jcr(workspace: EDIT) {
@@ -107,30 +115,22 @@ const addNode = (variables: {
 
 const getNodeByPath = (path: string) => gqlRequest({query: GET_NODE_BY_PATH_QUERY, variables: {path}});
 
-const waitForNodeByPath = (path: string, timeoutMs = 10000, intervalMs = 2000) => {
-    const startedAt = Date.now();
+const waitForNodeByPath = (path: string, timeoutMs = LONG_TIMEOUT, intervalMs = MEDIUM_TIMEOUT) =>
+    cy.waitUntil(
+        () =>
+            getNodeByPath(path).then((result: GraphQLResult) => {
+                if (result.errors !== undefined && !hasPathNotFoundError(result.errors)) {
+                    assertNoGraphQLErrors(result, `GraphQL errors while waiting for node ${path}`);
+                }
 
-    const poll = (): Cypress.Chainable =>
-        getNodeByPath(path).then((result: GraphQLResult) => {
-            if (result.errors !== undefined && !hasPathNotFoundError(result.errors)) {
-                assertNoGraphQLErrors(result, `GraphQL errors while waiting for node ${path}`);
-            }
-
-            if (result?.data?.jcr?.nodeByPath?.uuid) {
-                return cy.wrap(null, {log: false});
-            }
-
-            const elapsedMs = Date.now() - startedAt;
-            if (elapsedMs >= timeoutMs) {
-                throw new Error(`Timed out after ${timeoutMs}ms waiting for node: ${path}`);
-            }
-
-            cy.log(`[kfind-setup] Waiting for node ${path} (${Math.floor(elapsedMs / 1000)}s)`);
-            return cy.wait(intervalMs, {log: false}).then(() => poll());
-        });
-
-    return poll();
-};
+                return !!result?.data?.jcr?.nodeByPath?.uuid;
+            }),
+        {
+            timeout: timeoutMs,
+            interval: intervalMs,
+            errorMsg: `Timed out after ${timeoutMs}ms waiting for node: ${path}`
+        }
+    );
 
 // Jahia admin configuration mutation expects values as strings, even for
 // numeric/boolean settings (e.g. value: "2").
@@ -236,9 +236,11 @@ export const openSearchModal = () => {
 
     cy.get('body').then($body => {
         if ($body.find(`${panelSelector}:visible`).length > 0) {
+            cy.log('[openSearchModal] Panel already visible, skipping open');
             return;
         }
 
+        cy.log('[openSearchModal] Trying custom event + keyboard shortcut');
         cy.window().then(win => {
             const dispatchOpenEvent = (target: any) => {
                 target.dispatchEvent(new target.CustomEvent('kfind:open-search'));
@@ -272,29 +274,24 @@ export const openSearchModal = () => {
 
     cy.get('body').then($body => {
         if ($body.find(`${panelSelector}:visible`).length > 0) {
+            cy.log('[openSearchModal] Panel opened via custom event / shortcut');
             return;
         }
 
         // Last-resort fallback for environments where synthetic events are ignored.
+        cy.log('[openSearchModal] Falling back to cy.type("{ctrl}k")');
         cy.get('body').type('{ctrl}k');
     });
 
-    cy.get(modalSelector, {timeout: 10000}).should('be.visible');
-    cy.get(panelSelector, {timeout: 10000}).should('be.visible');
-    cy.get('[data-kfind-search-input-wrapper="true"] input[type="search"]', {timeout: 10000})
+    cy.get(modalSelector, {timeout: LONG_TIMEOUT}).should('be.visible');
+    cy.get(panelSelector, {timeout: LONG_TIMEOUT}).should('be.visible');
+    cy.get('[data-kfind-search-input-wrapper="true"] input[type="search"]', {timeout: LONG_TIMEOUT})
         .as('searchInput')
         .should('be.visible');
 };
 
 export const closeSearchModal = () => {
-    cy.get('body').type('{esc}');
-    cy.get('body').then($body => {
-        if ($body.find('[data-kfind-panel="true"]').length === 0) {
-            return;
-        }
-
-        cy.get('[data-kfind-panel="true"]').should('not.be.visible');
-    });
+    cy.closeKfindModalIfOpen();
 };
 
 export const searchInModal = (query: string) => {

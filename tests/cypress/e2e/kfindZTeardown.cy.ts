@@ -8,6 +8,6 @@ describe('kFind test suite teardown', () => {
             return;
         }
 
-        // deleteSite(SITE_KEY);
+        deleteSite(SITE_KEY);
     });
 });

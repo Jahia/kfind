@@ -76,7 +76,7 @@ function createUrlReverseLookupProvider(
 const urlReverseLookupProvider: KFindProvider = {
   priority: 5,
   title: "search.urlReverseLookup.title",
-  titleDefault: "Direct URL match",
+  titleDefault: "URL or path match",
   isEnabled: () => isProviderEnabled("urlReverseLookupEnabled"),
   maxResults: () => getDefaultDisplayedResults(),
   canHandle: looksLikeUrl,

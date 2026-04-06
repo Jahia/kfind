@@ -24,7 +24,6 @@ import { useTranslation } from "react-i18next";
 import { ResultCard } from "../ResultCard/ResultCard.tsx";
 import type { SearchHit } from "../../kfind-providers/types.ts";
 import { useResultsPagination } from "../shared/useResultsPagination.ts";
-import resultsLayout from "../shared/resultsTableLayout.module.css";
 import s from "./ResultsSection.module.css";
 
 type ResultsSectionProps = {
@@ -88,7 +87,7 @@ export const ResultsSection = ({
 
   return (
       <div
-      className={`${resultsLayout.section} ${s.section}`}
+      className={s.section}
       data-kfind-results-section={sectionKey}
       data-kfind-results-section-key={sectionKey}
       >
@@ -101,7 +100,7 @@ export const ResultsSection = ({
       )}
 
           {visibleHits.length > 0 && (
-          <ul className={resultsLayout.resultsList}>{renderRows()}</ul>
+          <ul className={s.resultsList}>{renderRows()}</ul>
       )}
 
           {loading && hits.length > 0 && (
@@ -112,7 +111,7 @@ export const ResultsSection = ({
 
           {!loading && hasMoreToShow && hits.length > 0 && (
           <Button
-          className={resultsLayout.showMoreButton}
+          className={s.showMoreButton}
           variant="ghost"
           label={t("search.showMore", "Show more")}
           data-kfind-show-more="true"

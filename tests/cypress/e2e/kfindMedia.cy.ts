@@ -1,6 +1,7 @@
 import {
     createMediaViaGraphql,
     createTestToken,
+    MEDIUM_TIMEOUT,
     searchInModal,
     SITE_KEY,
     visitKfindSiteInJContent
@@ -28,14 +29,14 @@ describe('kFind media provider', () => {
     it('finds a media node created via GraphQL', () => {
         searchInModal(exactFile);
 
-        cy.get('[data-kfind-panel="true"]').contains('Media', {timeout: 2000});
-        cy.get('[data-kfind-panel="true"]').contains(exactFile, {timeout: 2000});
+        cy.get('[data-kfind-panel="true"]').contains('Media', {timeout: MEDIUM_TIMEOUT});
+        cy.get('[data-kfind-panel="true"]').contains(exactFile, {timeout: MEDIUM_TIMEOUT});
     });
 
     it('filters media results by query term', () => {
         searchInModal(`exact-${token}`);
 
-        cy.get('[data-kfind-panel="true"]').contains(exactFile, {timeout: 2000});
+        cy.get('[data-kfind-panel="true"]').contains(exactFile, {timeout: MEDIUM_TIMEOUT});
         cy.get('[data-kfind-panel="true"]').should('not.contain', broaderFile);
     });
 });

@@ -9,11 +9,16 @@ import org.jahia.modules.graphql.provider.dxm.DXGraphQLProvider;
 import org.jahia.modules.graphql.provider.dxm.node.GqlJcrNode;
 import org.jahia.modules.graphql.provider.dxm.node.GqlJcrNodeImpl;
 import org.jahia.osgi.BundleUtils;
+import org.jahia.services.content.JCRContentUtils;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.JCRSessionFactory;
 import org.jahia.services.content.JCRSessionWrapper;
-import org.jahia.services.render.URLResolver;
-import org.jahia.services.render.URLResolverFactory;
+import org.jahia.services.seo.VanityUrl;
+import org.jahia.services.seo.jcr.VanityUrlManager;
+import org.jahia.services.seo.jcr.VanityUrlService;
+import org.jahia.services.sites.JahiaSitesService;
+import org.apache.commons.lang.StringUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +40,8 @@ import java.util.regex.Pattern;
  * <li>Building candidate paths (raw, /sites/{siteKey}+path,
  * /sites/{siteKey}/home+path)</li>
  * <li>Resolving each candidate via {@link URLResolverFactory}</li>
- * <li>Returning all distinct resolved nodes</li>
+ * <li>Returning all resolved nodes in resolver order (duplicates may
+ * occur)</li>
  * </ol>
  */
 @GraphQLTypeExtension(DXGraphQLProvider.Query.class)
@@ -63,12 +69,12 @@ public class KFindQueryExtensions {
 
         // Prevent DoS through extremely long input URLs
         if (url != null && url.length() > 2000) {
-            logger.debug("[urlReverseLookup] Rejected — url exceeds maximum length of 2000 characters");
+            logger.info("[urlReverseLookup] Rejected — url exceeds maximum length of 2000 characters");
             throw new IllegalArgumentException("URL exceeds maximum allowed length of 2000 characters");
         }
 
         if (!SITE_KEY_PATTERN.matcher(siteKey).matches()) {
-            logger.debug("[urlReverseLookup] Rejected — siteKey '{}' fails validation pattern", siteKey);
+            logger.info("[urlReverseLookup] Rejected — siteKey '{}' fails validation pattern", siteKey);
             throw new IllegalArgumentException("Invalid site key: " + siteKey);
         }
 
@@ -77,65 +83,70 @@ public class KFindQueryExtensions {
                     .getCurrentUserSession("default");
             String workspace = session.getWorkspace().getName();
 
-            String path = extractPath(url);
-            logger.debug("[urlReverseLookup] extractPath('{}') => '{}'", url, path);
+            List<GqlJcrNode> results = resolveCandidates(url, siteKey, workspace, session);
 
-            List<GqlJcrNode> results = new ArrayList<>();
-            Set<String> seenPaths = new LinkedHashSet<>();
-
-            for (String candidate : buildServiceCandidates(path, siteKey)) {
-                Optional<GqlJcrNode> resolved = resolveWithUrlResolver(candidate, siteKey, workspace);
-                if (resolved.isPresent()) {
-                    String nodePath = resolved.get().getPath();
-                    if (seenPaths.add(nodePath)) {
-                        logger.debug("[urlReverseLookup] Resolved via URLResolver at candidate='{}' → node='{}'",
-                                candidate, nodePath);
-                        results.add(resolved.get());
-                    }
-                }
-            }
-
-            logger.debug("[urlReverseLookup] END — {} node(s) found for url='{}'", results.size(), url);
             return results;
         } catch (RepositoryException e) {
-            logger.debug("[urlReverseLookup] RepositoryException for url='{}': {}", url, e.getMessage(), e);
+            logger.warn("[urlReverseLookup] RepositoryException for url='{}': {}", url, e.getMessage(), e);
             throw new RuntimeException("Error during URL reverse lookup: " + e.getMessage(), e);
         }
+    }
+
+    private static List<GqlJcrNode> resolveCandidates(
+            String url,
+            String siteKey,
+            String workspace,
+            JCRSessionWrapper session) {
+        List<GqlJcrNode> results = new ArrayList<>();
+        LinkedHashSet<String> candidates = buildAlternativesUrlsCandidates(url, siteKey);
+
+        for (String candidate : candidates) {
+            Optional<GqlJcrNode> byPath = resolveByPath(candidate, session);
+            byPath.ifPresent(results::add);
+
+            List<GqlJcrNode> byVanity = resolveWithVanityUrlService(candidate, siteKey, session);
+            results.addAll(byVanity);
+        }
+
+        return results;
     }
 
     /**
      * Extracts the path from a URL string. Handles both full URLs and plain paths.
      */
     private static String extractPath(String url) {
-        logger.debug("[extractPath] input='{}'", url);
 
+        String rawPath;
         if (url == null || url.isEmpty()) {
-            logger.debug("[extractPath] input is null or empty — returning '/'");
-            return "/";
-        }
-
-        try {
-            if (url.startsWith("http://") || url.startsWith("https://")) {
-                logger.debug("[extractPath] detected full URL scheme, parsing with URI");
-                URI uri = URI.create(url);
-                logger.debug("[extractPath] URI parsed — scheme='{}' host='{}' path='{}' query='{}' fragment='{}'",
-                        uri.getScheme(), uri.getHost(), uri.getPath(), uri.getQuery(), uri.getFragment());
-                String path = uri.getPath();
-                if (path == null || path.isEmpty()) {
-                    logger.debug("[extractPath] URI path is null/empty — returning '/'");
-                    return "/";
+            rawPath = "/";
+        } else {
+            try {
+                if (url.endsWith(".html")) {
+                    url = url.substring(0, url.length() - ".html".length());
                 }
-                logger.debug("[extractPath] extracted path from full URL: '{}'", path);
-                return path;
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    URI uri = URI.create(url);
+                    String path = uri.getPath();
+                    if (path == null || path.isEmpty()) {
+                        rawPath = "/";
+                    } else {
+                        rawPath = path;
+                    }
+                } else {
+                    rawPath = url.startsWith("/") ? url : "/" + url;
+                }
+            } catch (IllegalArgumentException e) {
+                // Not a valid URI — treat as a path
+                rawPath = url.startsWith("/") ? url : "/" + url;
             }
-        } catch (IllegalArgumentException e) {
-            // Not a valid URI — treat as a path
-            logger.debug("[extractPath] URI.create failed for '{}' — treating as plain path: {}", url, e.getMessage());
         }
 
-        String result = url.startsWith("/") ? url : "/" + url;
-        logger.debug("[extractPath] treating as plain path — result='{}'", result);
-        return result;
+        String normalized = rawPath.startsWith("/") ? rawPath : "/" + rawPath;
+        if (normalized.length() > 1 && normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+
+        return normalized;
     }
 
     /**
@@ -145,83 +156,165 @@ public class KFindQueryExtensions {
      * 1. Raw path as-is (e.g. standard JCR paths)
      * 2. /sites/{siteKey}/path (e.g. direct vanity URLs)
      * 3. /sites/{siteKey}/home/path (common Jahia structure)
+     * <p>
+     * Additionally, if the extracted path starts with a language prefix
+     * (e.g. {@code /fr/...} or {@code /en-us/...}) matching one of the site's
+     * configured languages, a second set of candidates is generated with the
+     * language prefix stripped.
      *
-     * @param rawPath The extracted path from the URL
+     * @param url     The raw input URL/path provided to urlReverseLookup
      * @param siteKey The targeted site key
-     * @return Set of normalized JCR path candidates, preserving insertion order
-     *         (deduplicated)
+     * @return Ordered unique candidate paths generated from the input URL
      */
-    private static Set<String> buildServiceCandidates(String rawPath, String siteKey) {
+    private static LinkedHashSet<String> buildAlternativesUrlsCandidates(String url, String siteKey) {
         String siteRoot = "/sites/" + siteKey;
-        List<String> generatedCandidates = new ArrayList<>();
+        LinkedHashSet<String> candidates = new LinkedHashSet<>();
 
-        generatedCandidates.add(rawPath);
-        generatedCandidates.add(siteRoot + rawPath);
-        generatedCandidates.add(siteRoot + "/home" + rawPath);
-
-        Set<String> candidates = new LinkedHashSet<>();
-        List<String> duplicates = new ArrayList<>();
-        for (String candidate : generatedCandidates) {
-            String normalized = normalizeCandidatePath(candidate);
-            if (!candidates.add(normalized)) {
-                duplicates.add(normalized);
-            }
+        candidates.add(url);
+        if (url.endsWith(".html")) {
+            candidates.add(url.substring(0, url.length() - ".html".length()));
         }
 
-        if (!duplicates.isEmpty()) {
-            logger.debug("[buildServiceCandidates] removed duplicate candidate(s): {}", duplicates);
+        String path = extractPath(url);
+
+        candidates.add(path);
+
+        candidates.add(siteRoot + path);
+        candidates.add(siteRoot + "/home" + path);
+
+        // If the path starts with a language prefix (e.g. /fr/ or /en-us/),
+        // add candidates with the language segment stripped.
+        Optional<String> langFreePath = stripLanguagePrefix(path, siteKey);
+        if (langFreePath.isPresent()) {
+            String stripped = langFreePath.get();
+            candidates.add(stripped);
+            candidates.add(siteRoot + stripped);
+            candidates.add(siteRoot + "/home" + stripped);
         }
-        logger.debug("[buildServiceCandidates] {} candidate(s): {}", candidates.size(), candidates);
+
+        for (String candidate : candidates) {
+            logger.debug("[buildAlternativesUrls] candidate: {}", candidate);
+        }
+
         return candidates;
     }
 
-    private static String normalizeCandidatePath(String candidate) {
-        if (candidate == null || candidate.isEmpty()) {
-            return "/";
-        }
-
-        String normalized = candidate.startsWith("/") ? candidate : "/" + candidate;
-        if (normalized.length() > 1 && normalized.endsWith("/")) {
-            normalized = normalized.substring(0, normalized.length() - 1);
-        }
-        return normalized;
-    }
-
     /**
-     * Resolves a candidate path against the JCR using the Jahia URLResolver.
-     * Note: OSGi service lookups here are thread-safe and dynamic.
-     *
-     * @param path      The candidate JCR path to resolve
-     * @param siteKey   The current site key context
-     * @param workspace The target JCR workspace (e.g., 'default' or 'live')
-     * @return Optional containing the resolved GqlJcrNode, or empty if resolution
-     *         fails/node is not found
+     * If the first segment of {@code path} is a language code configured on the
+     * given site, returns the path without that segment. Otherwise returns empty.
+     * <p>
+     * Examples (assuming "fr" and "en-us" are site languages):
+     * <ul>
+     * <li>{@code /fr/contents/page} → {@code /contents/page}</li>
+     * <li>{@code /en-us/contents/page} → {@code /contents/page}</li>
+     * <li>{@code /contents/page} → empty (no language prefix)</li>
+     * </ul>
      */
-    private static Optional<GqlJcrNode> resolveWithUrlResolver(String path, String siteKey, String workspace) {
-        logger.debug("[resolveWithUrlResolver] path='{}' siteKey='{}' workspace='{}'", path, siteKey, workspace);
+    private static Optional<String> stripLanguagePrefix(String path, String siteKey) {
+        if (path == null || path.length() < 2 || !path.startsWith("/")) {
+            return Optional.empty();
+        }
 
-        URLResolverFactory urlResolverFactory = BundleUtils.getOsgiService(URLResolverFactory.class, null);
-        if (urlResolverFactory == null) {
-            logger.debug("[resolveWithUrlResolver] URLResolverFactory OSGi service unavailable");
+        // Extract the first segment: "/fr/contents/..." → "fr"
+        int secondSlash = path.indexOf('/', 1);
+        if (secondSlash == -1) {
+            // Path is just "/fr" — nothing after the language prefix
+            return Optional.empty();
+        }
+
+        String firstSegment = path.substring(1, secondSlash);
+        if (firstSegment.isEmpty()) {
             return Optional.empty();
         }
 
         try {
-            URLResolver resolver = urlResolverFactory.createURLResolver(path, siteKey, workspace, null);
-            resolver.setSiteKey(siteKey);
-            JCRNodeWrapper node = resolver.getNode();
-            if (node != null) {
-                logger.debug("[resolveWithUrlResolver] resolved node — path='{}' type='{}'",
-                        node.getPath(), node.getPrimaryNodeType().getName());
-                return Optional.of(new GqlJcrNodeImpl(node));
+            Set<String> siteLanguages = JahiaSitesService.getInstance()
+                    .getSiteByKey(siteKey).getLanguages();
+
+            if (siteLanguages != null && siteLanguages.contains(firstSegment)) {
+                String remainder = path.substring(secondSlash);
+                logger.debug("[stripLanguagePrefix] stripped language '{}' from path '{}' → '{}'",
+                        firstSegment, path, remainder);
+                return Optional.of(remainder);
             }
-        } catch (RepositoryException e) {
-            logger.debug("[resolveWithUrlResolver] RepositoryException while resolving path='{}'", path, e);
-        } catch (RuntimeException e) {
-            logger.debug("[resolveWithUrlResolver] RuntimeException while resolving path='{}'", path, e);
+        } catch (Exception e) {
+            logger.debug("[stripLanguagePrefix] could not check site languages for siteKey='{}': {}",
+                    siteKey, e.getMessage());
         }
 
-        logger.debug("[resolveWithUrlResolver] returning empty for path='{}'", path);
         return Optional.empty();
     }
+
+    private static Optional<GqlJcrNode> resolveByPath(String path, JCRSessionWrapper session) {
+        if (path == null || path.isEmpty() || "/".equals(path)) {
+            return Optional.empty();
+        }
+
+        try {
+            String escapedPath = JCRContentUtils.escapeNodePath(path);
+            if (!session.nodeExists(escapedPath)) {
+                return Optional.empty();
+            }
+
+            JCRNodeWrapper node = session.getNode(escapedPath);
+            return Optional.of(new GqlJcrNodeImpl(node));
+        } catch (RepositoryException e) {
+            logger.info("[resolveByPath] RepositoryException while resolving path='{}'", path, e);
+            return Optional.empty();
+        } catch (RuntimeException e) {
+            logger.info("[resolveByPath] RuntimeException while resolving path='{}'", path, e);
+            return Optional.empty();
+        }
+    }
+
+    private static List<GqlJcrNode> resolveWithVanityUrlService(
+            String path,
+            String siteKey,
+            JCRSessionWrapper session) {
+
+        List<GqlJcrNode> resolvedNodes = new ArrayList<>();
+
+        VanityUrlService vanityUrlService = BundleUtils.getOsgiService(VanityUrlService.class, null);
+
+        if (vanityUrlService == null) {
+            logger.warn("[resolveWithVanityUrlService] VanityUrlService OSGi service unavailable");
+            return resolvedNodes;
+        }
+
+        if (path == null || path.isEmpty() || "/".equals(path)) {
+            return resolvedNodes;
+        }
+
+        try {
+            List<VanityUrl> urls = vanityUrlService.findExistingVanityUrls(
+                    path, siteKey, session.getWorkspace().getName());
+
+            for (VanityUrl vanityUrl : urls) {
+                String nodePath = StringUtils.substringBefore(vanityUrl.getPath(),
+                        "/" + VanityUrlManager.VANITYURLMAPPINGS_NODE + "/");
+
+                if (nodePath == null || nodePath.isEmpty()) {
+                    continue;
+                }
+
+                if (!session.nodeExists(nodePath)) {
+                    continue;
+                }
+
+                JCRNodeWrapper node = session.getNode(nodePath);
+                logger.info("[resolveWithVanityUrlService] resolved vanity URL — path='{}' nodePath='{}' type='{}'",
+                        path, nodePath, node.getPrimaryNodeType().getName());
+                resolvedNodes.add(new GqlJcrNodeImpl(node));
+            }
+        } catch (RepositoryException e) {
+            logger.info("[resolveWithVanityUrlService] RepositoryException for path='{}' siteKey='{}': {}",
+                    path, siteKey, e.getMessage(), e);
+        } catch (RuntimeException e) {
+            logger.info("[resolveWithVanityUrlService] RuntimeException for path='{}' siteKey='{}': {}",
+                    path, siteKey, e.getMessage(), e);
+        }
+
+        return resolvedNodes;
+    }
+
 }
