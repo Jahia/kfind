@@ -17,10 +17,11 @@ describe('kFind URL reverse lookup provider', () => {
     const homePathPageName = 'luxe-title';
 
     before('Seed URL lookup content', () => {
-        cy.login();
-        createPageViaGraphql(SITE_KEY, pageName, pageTitle);
-        createPageViaGraphql(SITE_KEY, localePathPageName, `kfind locale path ${token}`);
-        createPageViaGraphql(SITE_KEY, homePathPageName, `kfind home path ${token}`);
+        return cy.login().then(() =>
+            createPageViaGraphql(SITE_KEY, pageName, pageTitle)
+                .then(() => createPageViaGraphql(SITE_KEY, localePathPageName, `kfind locale path ${token}`))
+                .then(() => createPageViaGraphql(SITE_KEY, homePathPageName, `kfind home path ${token}`))
+        );
     });
 
     beforeEach(() => {

@@ -58,7 +58,7 @@ query getNodeByPath($path: String!) {
 
 const KFIND_CONFIG_PID = 'org.jahia.pm.modules.kfind';
 
-const LOCALHOST_BASE_URL = 'http://localhost:8080';
+const LOCALHOST_BASE_URL = 'http://jahia:8080';
 
 const asNonEmptyString = (value: unknown): string | undefined => {
     if (typeof value !== 'string') {
@@ -425,7 +425,6 @@ export const createPageViaGraphql = (siteKey: string, pageName: string, pageTitl
         ensureHomePage().then(() =>
             getNodeByPath(`/sites/${siteKey}/home/${pageName}`).then((existing: GraphQLResult) => {
                 if (existing?.data?.jcr?.nodeByPath?.uuid) {
-                    cy.log(`[createPage] Page already exists: ${pageName}`);
                     return existing;
                 }
 

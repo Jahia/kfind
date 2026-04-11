@@ -1,8 +1,8 @@
-import {gql} from '@apollo/client';
+import { gql } from "@apollo/client";
 
 export const URL_REVERSE_LOOKUP_QUERY = gql`
   query UrlReverseLookup($url: String!, $siteKey: String!, $language: String!) {
-    urlReverseLookup(url: $url, siteKey: $siteKey) {
+    fuzzyUrlAndPathLookup(url: $url, siteKey: $siteKey) {
       displayName(language: $language)
       name
       path

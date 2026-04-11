@@ -32,7 +32,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Extends the Jahia GraphQL Query type with a {@code urlReverseLookup} field.
+ * Extends the Jahia GraphQL Query type with a {@code fuzzyUrlAndPathLookup}
+ * field.
  * <p>
  * Given a live website URL, this extension resolves matching JCR nodes by:
  * <ol>
@@ -60,21 +61,21 @@ public class KFindQueryExtensions {
      * @return a list of matching GqlJcrNode instances (may be empty)
      */
     @GraphQLField
-    @GraphQLName("urlReverseLookup")
+    @GraphQLName("fuzzyUrlAndPathLookup")
     @GraphQLDescription("Resolve a live website URL to its JCR nodes via vanity URL or direct path matching")
-    public static List<GqlJcrNode> urlReverseLookup(
+    public static List<GqlJcrNode> fuzzyUrlAndPathLookup(
             @GraphQLNonNull @GraphQLName("url") @GraphQLDescription("The URL or path to look up") String url,
             @GraphQLNonNull @GraphQLName("siteKey") @GraphQLDescription("The Jahia site key") String siteKey) {
-        logger.debug("[urlReverseLookup] START — url='{}' siteKey='{}'", url, siteKey);
+        logger.debug("[fuzzyUrlAndPathLookup] START — url='{}' siteKey='{}'", url, siteKey);
 
         // Prevent DoS through extremely long input URLs
         if (url != null && url.length() > 2000) {
-            logger.info("[urlReverseLookup] Rejected — url exceeds maximum length of 2000 characters");
+            logger.info("[fuzzyUrlAndPathLookup] Rejected — url exceeds maximum length of 2000 characters");
             throw new IllegalArgumentException("URL exceeds maximum allowed length of 2000 characters");
         }
 
         if (!SITE_KEY_PATTERN.matcher(siteKey).matches()) {
-            logger.info("[urlReverseLookup] Rejected — siteKey '{}' fails validation pattern", siteKey);
+            logger.info("[fuzzyUrlAndPathLookup] Rejected — siteKey '{}' fails validation pattern", siteKey);
             throw new IllegalArgumentException("Invalid site key: " + siteKey);
         }
 
@@ -87,7 +88,7 @@ public class KFindQueryExtensions {
 
             return results;
         } catch (RepositoryException e) {
-            logger.warn("[urlReverseLookup] RepositoryException for url='{}': {}", url, e.getMessage(), e);
+            logger.warn("[fuzzyUrlAndPathLookup] RepositoryException for url='{}': {}", url, e.getMessage(), e);
             throw new RuntimeException("Error during URL reverse lookup: " + e.getMessage(), e);
         }
     }
@@ -162,7 +163,7 @@ public class KFindQueryExtensions {
      * configured languages, a second set of candidates is generated with the
      * language prefix stripped.
      *
-     * @param url     The raw input URL/path provided to urlReverseLookup
+     * @param url     The raw input URL/path provided to fuzzyUrlAndPathLookup
      * @param siteKey The targeted site key
      * @return Ordered unique candidate paths generated from the input URL
      */

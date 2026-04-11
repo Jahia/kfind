@@ -33,6 +33,6 @@ export default defineConfig({
             'cypress/e2e/kfindZTeardown.cy.ts'
         ],
         excludeSpecPattern: '*.ignore.ts',
-        baseUrl: process.env.CYPRESS_BASE_URL || process.env.JAHIA_URL || 'http://localhost:8080'
+        baseUrl: process.env.CYPRESS_BASE_URL || process.env.JAHIA_URL || 'http://jahia:8080'
     }
 });

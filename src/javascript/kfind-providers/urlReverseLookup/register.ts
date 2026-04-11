@@ -55,7 +55,7 @@ function createUrlReverseLookupProvider(
 ): KFindResultsProvider {
   return withStaleResponseFiltering(async (query) => {
     const result = await client.query<{
-      urlReverseLookup: GqlJcrNode[];
+      fuzzyUrlAndPathLookup: GqlJcrNode[];
     }>({
       query: URL_REVERSE_LOOKUP_QUERY,
       variables: {
@@ -66,7 +66,7 @@ function createUrlReverseLookupProvider(
       fetchPolicy: "network-only",
     });
 
-    const nodes = result.data?.urlReverseLookup ?? [];
+    const nodes = result.data?.fuzzyUrlAndPathLookup ?? [];
     const hits: SearchHit[] = nodes.map(jcrNodeToSearchHit);
 
     return { hits, hasMore: false };
