@@ -8,13 +8,13 @@ React 18 + TypeScript, bundled with Vite 7 and Module Federation (`@jahia/vite-f
 
 ## Keyboard Shortcuts
 
-| Action                | Key                 |
-| --------------------- | ------------------- |
-| Open / close modal    | **⌘K** / **Ctrl+K** |
-| Close modal           | **Esc**             |
-| Navigate results      | **↑** / **↓**       |
-| Go to selected result | **Enter**           |
-| Edit selected result  | **E**               |
+| Action                | Key                     |
+| --------------------- | ----------------------- |
+| Open / close modal    | **⌘K** / **Ctrl+K**     |
+| Close modal           | **Esc**                 |
+| Navigate results      | **Tab** / **Shift+Tab** |
+| Go to selected result | **Enter**               |
+| Edit selected result  | **E**                   |
 
 A custom DOM event `kfind:open-search` can also open the modal programmatically (used by the nav search button).
 
