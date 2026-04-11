@@ -1,4 +1,4 @@
-import {gql} from '@apollo/client';
+import { gql } from "@apollo/client";
 
 export const JCR_MAIN_RESOURCES_BY_CRITERIA_QUERY = gql`
   query JCRMainResourcesByCriteria(
@@ -20,10 +20,9 @@ export const JCR_MAIN_RESOURCES_BY_CRITERIA_QUERY = gql`
           language: $language
           nodeConstraint: {
             any: [
-              { contains: $searchTerm },
-              { contains: $searchTerm, property: "j:tagList" },
-              # vSearchTerm (%term%) makes hyphenated queries work via LIKE/contains
-              { contains: $vSearchTerm },
+              { contains: $searchTerm }
+              { contains: $searchTerm, property: "j:tagList" }
+              { contains: $vSearchTerm }
               { like: $vSearchTerm, property: "j:nodename" }
             ]
           }

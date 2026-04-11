@@ -43,8 +43,8 @@ export const KFindHeader = ({
     onTriggerSearch(searchValue);
   };
 
-  // Moonstone Input (v2.17.5 in this project) does not expose a prop to
-  // control clear-button tab focusability, so we patch it post-render.
+  // Moonstone Input (v2.17.5 here) has no prop to control clear-button tab focus,
+  // so we patch it after render.
   useEffect(() => {
     const wrapper = inputWrapperRef.current;
     if (!wrapper) {
@@ -66,36 +66,36 @@ export const KFindHeader = ({
   }, [inputWrapperRef]);
 
   return (
-      <div className={s.header}>
-          <div className={s.titleRow}>
-              <Typography variant="title">
-                  {t("search.modal.title", "Welcome to kFind")}
-              </Typography>
-              <Typography variant="caption" className={s.siteInfo}>
-                  {t("search.modal.siteInfo", "Searching in {{site}}, {{language}}", {
+    <div className={s.header}>
+      <div className={s.titleRow}>
+        <Typography variant="title">
+          {t("search.modal.title", "Welcome to kFind")}
+        </Typography>
+        <Typography variant="caption" className={s.siteInfo}>
+          {t("search.modal.siteInfo", "Searching in {{site}}, {{language}}", {
             site: getSiteKey(),
             language: getSearchLanguage(),
           })}
-              </Typography>
-          </div>
-          <div ref={inputWrapperRef} data-kfind-search-input-wrapper="true">
-              <form
+        </Typography>
+      </div>
+      <div ref={inputWrapperRef} data-kfind-search-input-wrapper="true">
+        <form
           role="search"
           data-kfind-search-form="true"
           onSubmit={handleSubmit}
-              >
-                  <Input
+        >
+          <Input
             size="big"
             type="search"
             placeholder={t("search.placeholder", "Search…")}
             value={searchValue}
-            icon={<Search/>}
+            icon={<Search />}
             focusOnField={focusOnField}
             onChange={(e) => onSearchChange(e.target.value)}
             onClear={onSearchClear}
           />
-              </form>
-          </div>
+        </form>
       </div>
+    </div>
   );
 };

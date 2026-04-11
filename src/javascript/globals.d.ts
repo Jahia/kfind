@@ -70,7 +70,7 @@ declare interface Window {
   };
 }
 
-// __BUILD_TIME__ is no longer a compile-time define; build time is served via contextJsParameters.kfind.buildTime from the JSP
+// Build time now comes from contextJsParameters.kfind.buildTime via JSP.
 
 declare module "*.module.css" {
   const classes: { readonly [key: string]: string };

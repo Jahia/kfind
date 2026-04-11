@@ -48,9 +48,8 @@ export function createJcrSearchProvider(
 ): KFindResultsProvider {
   return withStaleResponseFiltering(async (query, page) => {
     const sitePath = `/sites/${getSiteKey()}`;
-    // VSearchTerm wraps the query in SQL LIKE wildcards (%term%), which
-    // is what makes hyphenated queries work: the LIKE/contains on %term%
-    // bypasses Lucene's hyphen-as-NOT interpretation.
+    // Use SQL-like wildcard matching (%term%) so hyphenated queries still match
+    // via LIKE/contains instead of Lucene's hyphen-as-NOT interpretation.
     const searchTerm = query;
 
     // Request PAGE_SIZE + 1 to check if there are more items to paginate

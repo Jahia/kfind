@@ -34,7 +34,6 @@ export const KFindModal = () => {
   // ── Keyboard shortcut & custom event listeners ──
   // Registered on both the iframe document and the parent document so the
   // shortcut works regardless of which frame has focus.
-  // TODO: Try to clean
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {

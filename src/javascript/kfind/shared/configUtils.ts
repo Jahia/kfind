@@ -22,8 +22,7 @@ export function getDefaultDisplayedResults(): number {
 }
 
 export function getShowMoreIncrement(): number {
-  // Kept configurable separately from provider max results: this controls
-  // how many additional rows are revealed per click in the UI.
+  // Separate from provider max results: controls rows revealed per click.
   return cfg()?.showMoreIncrement ?? 10;
 }
 

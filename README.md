@@ -11,6 +11,7 @@ A Spotlight-style search modal for [Jahia CMS](https://www.jahia.com/) that lets
 - A good reusable deterministic Java service method was not found to resolve a node from a URL across both vanity and regular URL forms (`/sites/{siteKey}/...`, etc.).
 - Cypress tests were blocked by CSRF at one point, leading to a workaround that may no longer be necessary.
 - Opening Page Builder and the preview drawer cannot currently be done through stable JavaScript APIs; the implemented behavior relies on workarounds.
+- `configUtils` may be unnecessary and should be reassessed.
 
 ## Stack
 

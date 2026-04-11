@@ -70,7 +70,7 @@ export function getSearchLanguage(): string {
  * Centralized to keep feature-navigation and content-navigation behavior aligned.
  */
 export function pushParentNavigation(url: string): void {
-  // No documented app-shell API was found for cross-mfe route navigation.
+  // No documented app-shell API was found for cross-MFE route navigation.
   const navKey = String(Date.now());
   window.parent.history.pushState({ key: navKey }, "", url);
   window.parent.dispatchEvent(
@@ -91,7 +91,7 @@ export function pushParentNavigation(url: string): void {
  * are functionally equivalent.
  */
 export function pushRouteNavigation(path: string): void {
-  // No stable public method was found in app-shell docs for imperative route changes.
+  // No stable app-shell API is documented for imperative route changes.
   const routerHistory = window.parent.jahia?.routerHistory;
   if (routerHistory) {
     // Opportunistic bridge: use it only when this runtime-specific object exists.
@@ -105,12 +105,8 @@ export function pushRouteNavigation(path: string): void {
 function getParentReduxStore(): {
   dispatch: (action: unknown) => unknown;
 } | null {
-  // This MFE runs in an iframe and does not own the jContent Redux store.
-  // Navigation/state actions (jcontentGoto, preview drawer, table view mode)
-  // are handled by the parent Jahia shell store, so we intentionally bridge to
-  // `window.parent.jahia.reduxStore` when available.
-  // This is runtime-coupled and undocumented, hence the null-safe lookup and
-  // defensive dispatch wrappers around all calls.
+  // This MFE runs in an iframe and relies on the parent jContent Redux store
+  // for navigation and view-mode actions, so we bridge to it defensively.
   return window.parent.jahia?.reduxStore ?? null;
 }
 
