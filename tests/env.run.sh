@@ -8,11 +8,14 @@ mkdir -p results artifacts/results
 npx --yes --package @jahia/cypress@$version env.run
 status=$?
 
-if [[ -f results/test_success ]]; then
+# Make marker generation deterministic for downstream workflows.
+if [[ "$status" -eq 0 ]]; then
+	rm -f results/test_failure artifacts/results/test_failure
+	touch results/test_success
 	cp results/test_success artifacts/results/test_success
-fi
-
-if [[ -f results/test_failure ]]; then
+else
+	rm -f results/test_success artifacts/results/test_success
+	touch results/test_failure
 	cp results/test_failure artifacts/results/test_failure
 fi
 
