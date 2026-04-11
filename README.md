@@ -2,6 +2,16 @@
 
 A Spotlight-style search modal for [Jahia CMS](https://www.jahia.com/) that lets editors quickly find and navigate to any content, page, media, feature, or URL directly from the authoring interface. Open it with **⌘K** (macOS) or **Ctrl+K** (Windows/Linux) and start typing — results appear instantly across multiple search providers.
 
+## Known Issues
+
+- GraphQL API field placement may not be ideal yet: `fuzzyUrlAndPathLookup` was added at the query root.
+- `pom.xml` currently looks overly complex and likely needs simplification.
+- In `package.json`, using `kfind` as the package name appears to break Jahia UI behavior (root cause still unknown).
+- For the `features` provider, discovering reliable Jahia feature/menu routes is difficult and currently relies on guesswork.
+- A good reusable deterministic Java service method was not found to resolve a node from a URL across both vanity and regular URL forms (`/sites/{siteKey}/...`, etc.).
+- Cypress tests were blocked by CSRF at one point, leading to a workaround that may no longer be necessary.
+- Opening Page Builder and the preview drawer cannot currently be done through stable JavaScript APIs; the implemented behavior relies on workarounds.
+
 ## Stack
 
 React 18 + TypeScript, bundled with Vite 7 and Module Federation (`@jahia/vite-federation-plugin`). GraphQL queries run through Apollo Client 3 against Jahia's backend. The UI is built with [@jahia/moonstone](https://github.com/Jahia/moonstone) and styled with CSS Modules. Internationalization uses react-i18next (English, French, German). The module is packaged as an OSGi bundle via Maven.
